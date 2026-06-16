@@ -2,3 +2,5 @@ node_modules/
 public/
 .env.local
 .env
+.vercel
+.env*.local

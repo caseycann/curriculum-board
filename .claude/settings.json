@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/caseycann/Development/curriculum-board/api)",
+      "Bash(npm install *)",
+      "Bash(node build.js)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
+    ],
+    "additionalDirectories": [
+      "/Users/caseycann/Development/curriculum-board"
+    ]
+  }
+}
