@@ -17,23 +17,13 @@
     } catch (_) {}
   }
 
-  async function apply(data) {
+  function apply(data) {
     if (!data || !data.units) return;
     window.__setState(data.units, data.nid != null ? data.nid : 200);
     lastVersion = data.v != null ? data.v : null;
     busy = true;
     window.render();
     busy = false;
-  }
-
-  async function poll() {
-    if (busy) return;
-    try {
-      const r = await fetch(API);
-      if (!r.ok) return;
-      const d = await r.json();
-      if (d && d.v && d.v !== lastVersion) await apply(d);
-    } catch (_) {}
   }
 
   var _render = window.render;
@@ -43,13 +33,22 @@
   };
 
   (async function init() {
+    // Load persisted state on first open
     try {
       const r = await fetch(API);
       if (r.ok) {
         const d = await r.json();
-        if (d && d.units) await apply(d);
+        if (d && d.units) apply(d);
       }
     } catch (_) {}
-    setInterval(poll, 4000);
+
+    // Subscribe to real-time updates via Pusher WebSocket
+    const pusher = new Pusher(window.__PUSHER_KEY__, {
+      cluster: window.__PUSHER_CLUSTER__,
+    });
+    const channel = pusher.subscribe('curriculum-board');
+    channel.bind('state-update', function (data) {
+      if (data.v !== lastVersion) apply(data);
+    });
   })();
 })();
