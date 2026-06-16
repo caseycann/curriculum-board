@@ -3,8 +3,6 @@ const path = require('path');
 
 const html = fs.readFileSync(path.join(process.cwd(), 'curriculum_board.html'), 'utf8');
 const sync = fs.readFileSync(path.join(process.cwd(), 'sync.js'), 'utf8');
-// require.resolve lets Vercel's bundler detect and include this file automatically
-const pusherJs = fs.readFileSync(require.resolve('pusher-js/dist/web/pusher.min.js'), 'utf8');
 
 // Inject accessor closures into the same <script> scope as the let-declared
 // units/nid variables so our separate sync script can read and write them.
@@ -15,11 +13,12 @@ const withAccessors = html.replace(
   'function render(){'
 );
 
+// Load pusher-js via a separate endpoint to avoid </script> injection issues,
+// and fetch credentials at runtime via /api/config.
 const patched = withAccessors.replace(
   '</body>',
-  `<script>window.__PUSHER_KEY__='${process.env.PUSHER_KEY}';window.__PUSHER_CLUSTER__='${process.env.PUSHER_CLUSTER}';</script>\n` +
-  `<script>${pusherJs}</script>\n` +
-  `<script>\n${sync}\n</script>\n</body>`
+  '<script src="/api/pusher-client"></script>\n' +
+  '<script>\n' + sync + '\n</script>\n</body>'
 );
 
 module.exports = function handler(req, res) {
