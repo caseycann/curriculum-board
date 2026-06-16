@@ -3,6 +3,16 @@
   let lastVersion = null;
   let busy = false;
 
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = function () { reject(new Error('Failed to load ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+
   async function save() {
     if (busy) return;
     const v = Date.now();
@@ -42,8 +52,11 @@
       }
     } catch (_) {}
 
-    // Connect to Pusher for real-time updates
+    // Load Pusher client from our own endpoint, then subscribe
     try {
+      await loadScript('/api/pusher');
+      console.log('[sync] Pusher loaded, typeof Pusher:', typeof Pusher);
+
       const cfg = await (await fetch('/api/config')).json();
       if (!cfg.key) {
         console.warn('[sync] Pusher credentials not configured');
@@ -54,8 +67,9 @@
       ch.bind('state-update', function (data) {
         if (data.v !== lastVersion) apply(data);
       });
+      console.log('[sync] subscribed to curriculum-board channel');
     } catch (e) {
-      console.error('[sync] Pusher failed:', e);
+      console.error('[sync] Pusher setup failed:', e.message);
     }
   })();
 })();
