@@ -13,8 +13,7 @@ const patched = rawHtml
   .replace('let nid=200,', 'var nid=200;let ')
   .replace(
     '</body>',
-    '<script>\n' + pusherJs + '\n</script>\n' +
-    '<script>console.log("[probe] Pusher defined:", typeof Pusher);</script>\n' +
+    '<script>try{\n' + pusherJs + '\n}catch(e){console.error("[pusher-bundle] threw:",e.message)}\nconsole.error("[probe] Pusher defined:", typeof Pusher);</script>\n' +
     '<script>\n' + sync + '\n</script>\n</body>'
   );
 
