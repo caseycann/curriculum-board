@@ -6,11 +6,12 @@
   async function save() {
     if (busy) return;
     const v = Date.now();
+    const s = window.__getState();
     try {
       await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ units: window.units, nid: window.nid, v }),
+        body: JSON.stringify({ units: s.units, nid: s.nid, v }),
       });
       lastVersion = v;
     } catch (_) {}
@@ -18,8 +19,7 @@
 
   async function apply(data) {
     if (!data || !data.units) return;
-    window.units = data.units;
-    window.nid = data.nid != null ? data.nid : 200;
+    window.__setState(data.units, data.nid != null ? data.nid : 200);
     lastVersion = data.v != null ? data.v : null;
     busy = true;
     window.render();
@@ -36,14 +36,12 @@
     } catch (_) {}
   }
 
-  // Wrap the global render() so every re-render triggers a save
   var _render = window.render;
   window.render = function () {
     _render();
     if (!busy) save();
   };
 
-  // Load saved state immediately, then start polling
   (async function init() {
     try {
       const r = await fetch(API);
