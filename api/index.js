@@ -14,7 +14,7 @@ const withAccessors = html.replace(
 );
 // Inject Pusher public credentials and CDN client before the sync script
 const pusherConfig = `<script>window.__PUSHER_KEY__='${process.env.PUSHER_KEY}';window.__PUSHER_CLUSTER__='${process.env.PUSHER_CLUSTER}';</script>`;
-const pusherCDN = '<script src="https://js.pusher.com/8.4/pusher.min.js"></script>';
+const pusherCDN = '<script src="https://cdn.jsdelivr.net/npm/pusher-js@8.4.0/dist/web/pusher.min.js"></script>';
 const patched = withAccessors.replace(
   '</body>',
   pusherConfig + '\n' + pusherCDN + '\n<script>\n' + sync + '\n</script>\n</body>'

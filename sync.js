@@ -43,12 +43,16 @@
     } catch (_) {}
 
     // Subscribe to real-time updates via Pusher WebSocket
-    const pusher = new Pusher(window.__PUSHER_KEY__, {
-      cluster: window.__PUSHER_CLUSTER__,
-    });
-    const channel = pusher.subscribe('curriculum-board');
-    channel.bind('state-update', function (data) {
-      if (data.v !== lastVersion) apply(data);
-    });
+    try {
+      const pusher = new Pusher(window.__PUSHER_KEY__, {
+        cluster: window.__PUSHER_CLUSTER__,
+      });
+      const channel = pusher.subscribe('curriculum-board');
+      channel.bind('state-update', function (data) {
+        if (data.v !== lastVersion) apply(data);
+      });
+    } catch (e) {
+      console.error('[sync] Pusher failed to initialize:', e);
+    }
   })();
 })();
