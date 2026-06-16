@@ -1,25 +1,20 @@
 const fs = require('fs');
 const path = require('path');
 
-const html = fs.readFileSync(path.join(process.cwd(), 'curriculum_board.html'), 'utf8');
+const rawHtml = fs.readFileSync(path.join(process.cwd(), 'curriculum_board.html'), 'utf8');
 const sync = fs.readFileSync(path.join(process.cwd(), 'sync.js'), 'utf8');
 
-// Inject accessor closures into the same <script> scope as the let-declared
-// units/nid variables so our separate sync script can read and write them.
-const withAccessors = html.replace(
-  'function render(){',
-  'window.__getState=function(){return{units:units,nid:nid};};' +
-  'window.__setState=function(u,n){units=u;nid=n;};' +
-  'function render(){'
-);
-
-// Load pusher-js via a separate endpoint to avoid </script> injection issues,
-// and fetch credentials at runtime via /api/config.
-const patched = withAccessors.replace(
-  '</body>',
-  '<script src="/api/pusher-client"></script>\n' +
-  '<script>\n' + sync + '\n</script>\n</body>'
-);
+// Promote units and nid to true globals (var instead of let) so sync.js
+// can read/write them via window.units and window.nid without accessor hacks.
+// The source file on disk is untouched.
+const patched = rawHtml
+  .replace('let units=ORIG.map(u=>({...u}));', 'var units=ORIG.map(u=>({...u}));')
+  .replace('let nid=200,', 'var nid=200;let ')
+  .replace(
+    '</body>',
+    '<script src="https://js.pusher.com/8.2/pusher.min.js"></script>\n' +
+    '<script>\n' + sync + '\n</script>\n</body>'
+  );
 
 module.exports = function handler(req, res) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');

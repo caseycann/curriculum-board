@@ -6,12 +6,11 @@
   async function save() {
     if (busy) return;
     const v = Date.now();
-    const s = window.__getState();
     try {
       await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ units: s.units, nid: s.nid, v }),
+        body: JSON.stringify({ units: window.units, nid: window.nid, v }),
       });
       lastVersion = v;
     } catch (_) {}
@@ -19,7 +18,8 @@
 
   function apply(data) {
     if (!data || !data.units) return;
-    window.__setState(data.units, data.nid != null ? data.nid : 200);
+    window.units = data.units;
+    window.nid = data.nid != null ? data.nid : 200;
     lastVersion = data.v != null ? data.v : null;
     busy = true;
     window.render();
@@ -42,16 +42,16 @@
       }
     } catch (_) {}
 
-    // Fetch public Pusher credentials at runtime, then subscribe
+    // Connect to Pusher for real-time updates
     try {
       const cfg = await (await fetch('/api/config')).json();
       if (!cfg.key) {
-        console.warn('[sync] Pusher credentials not set — real-time sync disabled');
+        console.warn('[sync] Pusher credentials not configured');
         return;
       }
       const pusher = new Pusher(cfg.key, { cluster: cfg.cluster });
-      const channel = pusher.subscribe('curriculum-board');
-      channel.bind('state-update', function (data) {
+      const ch = pusher.subscribe('curriculum-board');
+      ch.bind('state-update', function (data) {
         if (data.v !== lastVersion) apply(data);
       });
     } catch (e) {
