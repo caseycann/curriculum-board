@@ -1,0 +1,10 @@
+{
+  "name": "curriculum-board",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.38.0"
+  }
+}
