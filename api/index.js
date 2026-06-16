@@ -14,6 +14,7 @@ const patched = rawHtml
   .replace(
     '</body>',
     '<script>\n' + pusherJs + '\n</script>\n' +
+    '<script>console.log("[probe] Pusher defined:", typeof Pusher);</script>\n' +
     '<script>\n' + sync + '\n</script>\n</body>'
   );
 
