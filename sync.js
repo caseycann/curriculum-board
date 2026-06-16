@@ -16,6 +16,8 @@
   async function save() {
     if (busy) return;
     const v = Date.now();
+    const unitsOk = Array.isArray(window.units);
+    console.log('[sync] save() units:', unitsOk ? window.units.length + ' items' : 'UNDEFINED');
     try {
       await fetch(API, {
         method: 'POST',
@@ -65,6 +67,7 @@
       const pusher = new Pusher(cfg.key, { cluster: cfg.cluster });
       const ch = pusher.subscribe('curriculum-board');
       ch.bind('state-update', function (data) {
+        console.log('[sync] received event, units:', data.units ? data.units.length : 'MISSING', 'v:', data.v, 'lastVersion:', lastVersion);
         if (data.v !== lastVersion) apply(data);
       });
       console.log('[sync] subscribed to curriculum-board channel');
