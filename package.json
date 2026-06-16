@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@upstash/redis": "^1.38.0",
-    "pusher": "^5.2.0"
+    "pusher": "^5.2.0",
+    "pusher-js": "^8.4.0"
   }
 }
