@@ -6,7 +6,9 @@
       "Bash(node build.js)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(node -e \"require.resolve\\('pusher-js/dist/web/pusher.min.js'\\) && console.log\\('pusher-js found'\\)\")",
+      "Bash(node -e ' *)"
     ],
     "additionalDirectories": [
       "/Users/caseycann/Development/curriculum-board"
