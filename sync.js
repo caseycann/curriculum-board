@@ -3,6 +3,16 @@
   let lastVersion = null;
   let busy = false;
 
+  function getState() {
+    if (typeof window.__getState === 'function') return window.__getState();
+    return { units: window.units, nid: window.nid };
+  }
+  function setState(units, nid) {
+    if (typeof window.__setState === 'function') { window.__setState(units, nid); return; }
+    window.units = units;
+    window.nid = nid;
+  }
+
   function loadScript(src) {
     return new Promise(function (resolve, reject) {
       var s = document.createElement('script');
@@ -16,13 +26,13 @@
   async function save() {
     if (busy) return;
     const v = Date.now();
-    const unitsOk = Array.isArray(window.units);
-    console.log('[sync] save() units:', unitsOk ? window.units.length + ' items' : 'UNDEFINED');
+    const s = getState();
+    console.log('[sync] save() — accessors:', typeof window.__getState, '— units:', Array.isArray(s.units) ? s.units.length + ' items' : 'UNDEFINED');
     try {
       await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ units: window.units, nid: window.nid, v }),
+        body: JSON.stringify({ units: s.units, nid: s.nid, v }),
       });
       lastVersion = v;
     } catch (_) {}
@@ -30,8 +40,7 @@
 
   function apply(data) {
     if (!data || !data.units) return;
-    window.units = data.units;
-    window.nid = data.nid != null ? data.nid : 200;
+    setState(data.units, data.nid != null ? data.nid : 200);
     lastVersion = data.v != null ? data.v : null;
     busy = true;
     window.render();
@@ -57,20 +66,14 @@
     // Load Pusher client from our own endpoint, then subscribe
     try {
       await loadScript('/api/pusher');
-      console.log('[sync] Pusher loaded, typeof Pusher:', typeof Pusher);
-
       const cfg = await (await fetch('/api/config')).json();
-      if (!cfg.key) {
-        console.warn('[sync] Pusher credentials not configured');
-        return;
-      }
+      if (!cfg.key) { console.warn('[sync] Pusher credentials not configured'); return; }
       const pusher = new Pusher(cfg.key, { cluster: cfg.cluster });
       const ch = pusher.subscribe('curriculum-board');
       ch.bind('state-update', function (data) {
-        console.log('[sync] received event, units:', data.units ? data.units.length : 'MISSING', 'v:', data.v, 'lastVersion:', lastVersion);
         if (data.v !== lastVersion) apply(data);
       });
-      console.log('[sync] subscribed to curriculum-board channel');
+      console.log('[sync] ready — typeof __getState:', typeof window.__getState);
     } catch (e) {
       console.error('[sync] Pusher setup failed:', e.message);
     }
