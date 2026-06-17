@@ -110,7 +110,6 @@ button.add:hover{background:#1d4f31}
     <div class="fr"><label>Skills</label><input id="fsk" type="text" placeholder="e.g. Audio editing, collaboration"></div>
     <div class="fr"><label>Tools</label><input id="fto" type="text" placeholder="e.g. SoundTrap, Adobe Express"></div>
     <div class="fr"><label>Notes</label><textarea id="fn" placeholder="Block schedule, co-teachers, logistics..."></textarea></div>
-    <div class="fr"><label>Disciplines</label><div class="dtags" id="dtags"></div></div>
     <div class="fr"><label>Block color</label><div class="cg" id="cg"></div></div>
     <div class="mbtns">
       <button id="cancelbtn">Cancel</button>
@@ -296,6 +295,12 @@ function buildTimeline(){
       wrap.dataset.uid=u.id; // key: lets resize update position directly
       wrap.dataset.dk=dk;
       wrap.style.left=p2.l;wrap.style.width=p2.w;wrap.style.background=info.bg;wrap.style.borderColor=info.bd;
+      wrap.style.zIndex='1';
+      // Bring to foreground on click so overlapping fields don't block resize handles
+      wrap.addEventListener('mousedown',()=>{
+        document.querySelectorAll('.df[data-dk="'+dk+'"]').forEach(el=>el.style.zIndex='1');
+        wrap.style.zIndex='20';
+      });
 
       const lh=document.createElement('div');lh.className='lh';
       lh.addEventListener('mousedown',e=>{
@@ -392,20 +397,14 @@ function openMod(uid){
   document.getElementById('fsk').value=u?u.skills:'';document.getElementById('fto').value=u?u.tools:'';
   document.getElementById('fn').value=u?u.notes:'';
   document.getElementById('savebtn').textContent=u?'Save changes':'Add block';
-  selPal=u?(u.pal||0):0;selDiscs=u?[...u.disc]:[];
-  const dt=document.getElementById('dtags');dt.innerHTML='';
-  Object.entries(DC).forEach(([k,v])=>{
-    const tag=document.createElement('div');const sel=selDiscs.includes(k);
-    tag.className='dtag'+(sel?' sel':'');tag.textContent=v.label;
-    if(sel){tag.style.background=v.bg;tag.style.borderColor=v.bd;tag.style.color=v.tx;}
-    tag.onclick=()=>{selDiscs=selDiscs.includes(k)?selDiscs.filter(d=>d!==k):[...selDiscs,k];openMod(editId);};
-    dt.appendChild(tag);
-  });
+  selPal=u?(u.pal||0):0;
   const cg=document.getElementById('cg');cg.innerHTML='';
   PAL.forEach((c,i)=>{
     const sw=document.createElement('div');sw.className='sw'+(i===selPal?' sel':'');
     sw.style.background=c.bg;sw.style.border='2px solid '+c.bd;sw.title=c.name;
-    sw.onclick=()=>{selPal=i;openMod(editId);};cg.appendChild(sw);
+    // Toggle selection directly — never call openMod() here or fields reset
+    sw.onclick=()=>{selPal=i;cg.querySelectorAll('.sw').forEach((s,j)=>s.classList.toggle('sel',j===i));};
+    cg.appendChild(sw);
   });
   document.getElementById('mbg').className='modal-bg op';
   setTimeout(()=>document.getElementById('ft').focus(),100);
@@ -418,7 +417,7 @@ document.getElementById('savebtn').addEventListener('click',()=>{
   const title=document.getElementById('ft').value.trim();if(!title){document.getElementById('ft').focus();return;}
   const data={title,sub:document.getElementById('fs').value.trim(),skills:document.getElementById('fsk').value.trim(),
     tools:document.getElementById('fto').value.trim(),notes:document.getElementById('fn').value.trim(),
-    disc:selDiscs.length?selDiscs:["CL"],pal:selPal};
+    disc:DISCS,pal:selPal};
   if(editId){const u=units.find(x=>x.id===editId);if(u)Object.assign(u,data);}
   else units.push({id:'u'+(++nid),...data,term:undefined,week:undefined});
   closeMod();render();saveState();
