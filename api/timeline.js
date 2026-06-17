@@ -549,14 +549,15 @@ window.addEventListener('pointermove',e=>{
     else{newStart=Math.min(col,origEnd);newSpan=Math.max(1,origEnd-newStart+1);}
     const u=units.find(x=>x.id===uid);if(!u)return;
     u.tlOffset=newStart-uDayCol;u.tlSpan=newSpan;
-    console.log('[resize-debug]',{rWidth:r.width,clientX:e.clientX,rLeft:r.left,col,uDayCol,origOffset,origSpan,newStart,newSpan,tlSpan:u.tlSpan});
     const blkEl=document.querySelector('.blk[data-uid="'+uid+'"]');
     if(blkEl){
       const sc=Math.max(0,uDayCol+u.tlOffset),ec=Math.min(TOTAL_DAYS-1,sc+u.tlSpan-1);
       const p2=pctD(sc,ec-sc+1);blkEl.style.left=p2.l;blkEl.style.width=p2.w;
       // Update date label live so user sees dates change as they drag
       const dtEl=blkEl.querySelector('.blk-dates');
-      if(dtEl)dtEl.textContent=dayToDate(sc)+' → '+dayToDate(sc+u.tlSpan);
+      const newText=dayToDate(sc)+' → '+dayToDate(sc+u.tlSpan);
+      if(dtEl)dtEl.textContent=newText;
+      console.log('[resize-debug] tlSpan:',u.tlSpan,'sc:',sc,'dateText:',newText);
     }
   } else {
     const{dk,uCol}=resizing;
