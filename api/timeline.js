@@ -218,7 +218,7 @@ function dayToWeek(day){return DAY_WEEK[Math.max(0,Math.min(DAY_WEEK.length-1,Ma
 const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MO_IDX={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
 function parseMonthDay(str){
-  const m=str&&str.trim().match(/^([A-Za-z]+)\s+(\d+)$/);if(!m)return null;
+  const m=str&&str.trim().match(/^([A-Za-z]+)\\s+(\\d+)$/);if(!m)return null;
   const mo=MO_IDX[m[1].slice(0,3).replace(/^./,c=>c.toUpperCase())];if(mo==null)return null;
   return new Date(mo>=8?2024:2025,mo,parseInt(m[2]));
 }
@@ -555,9 +555,7 @@ window.addEventListener('pointermove',e=>{
       const p2=pctD(sc,ec-sc+1);blkEl.style.left=p2.l;blkEl.style.width=p2.w;
       // Update date label live so user sees dates change as they drag
       const dtEl=blkEl.querySelector('.blk-dates');
-      const newText=dayToDate(sc)+' → '+dayToDate(sc+u.tlSpan);
-      if(dtEl)dtEl.textContent=newText;
-      console.log('[resize-debug] tlSpan:',u.tlSpan,'sc:',sc,'dateText:',newText);
+      if(dtEl)dtEl.textContent=dayToDate(sc)+' → '+dayToDate(sc+u.tlSpan);
     }
   } else {
     const{dk,uCol}=resizing;
