@@ -217,6 +217,38 @@ function pctD(dayCol,daySpan){daySpan=daySpan||7;return{l:(dayCol/TOTAL_DAYS*100
 const WEEK_DAY={};const DAY_WEEK=[];
 (function(){let d=0;TERMS.forEach(t=>t.weeks.forEach(w=>{WEEK_DAY[w]=d;DAY_WEEK.push(w);d+=7;}));})();
 function dayToWeek(day){return DAY_WEEK[Math.max(0,Math.min(DAY_WEEK.length-1,Math.floor(day/7)))]||'';}
+// Calendar date helpers (school year Sep 2024 – Jun 2025)
+const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MO_IDX={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+function parseMonthDay(str){
+  const m=str&&str.trim().match(/^([A-Za-z]+)\s+(\d+)$/);if(!m)return null;
+  const mo=MO_IDX[m[1].slice(0,3).replace(/^./,c=>c.toUpperCase())];if(mo==null)return null;
+  return new Date(mo>=8?2024:2025,mo,parseInt(m[2]));
+}
+// Convert day-index to calendar date string e.g. "Sep 28"
+function dayToDate(dayIdx){
+  const wk=Math.min(Math.floor(dayIdx/7),DAY_WEEK.length-1);
+  const di=dayIdx%7;
+  const base=parseMonthDay(DAY_WEEK[wk]);if(!base)return DAY_WEEK[wk]||'';
+  base.setDate(base.getDate()+di);
+  return MO[base.getMonth()]+' '+base.getDate();
+}
+// Convert calendar date string to day-index (matches typed input back to timeline)
+function dateToDay(str){
+  str=(str||'').trim();
+  if(WEEK_DAY[str]!=null)return WEEK_DAY[str]; // exact week label
+  const d=parseMonthDay(str);if(!d)return null;
+  let best=null,bestDiff=Infinity;
+  DAY_WEEK.forEach((w,wi)=>{
+    const base=parseMonthDay(w);if(!base)return;
+    for(let di=0;di<7;di++){
+      const chk=new Date(base);chk.setDate(chk.getDate()+di);
+      const diff=Math.abs(chk-d);
+      if(diff<bestDiff){bestDiff=diff;best=wi*7+di;}
+    }
+  });
+  return best;
+}
 function ensureDF(u){
   if(!u.discFields)u.discFields={};
   DISCS.forEach(dk=>{
@@ -313,7 +345,7 @@ function buildTimeline(){
     const col=colOf(u),c=pal(u);
     const uDayCol=col*7,tlOff=u.tlOffset||0,tlSpan=u.tlSpan||7;
     const p2=pctD(uDayCol+tlOff,tlSpan);
-    const startDay=uDayCol+tlOff, endDay=startDay+tlSpan-7;
+    const startDay=uDayCol+tlOff, endDay=startDay+tlSpan-1;
 
     const blk=document.createElement('div');
     blk.className='blk'+(detUid===u.id?' active':'');
@@ -338,14 +370,14 @@ function buildTimeline(){
     // Date range inputs
     const dv=document.createElement('div');dv.className='blk-dates';
     const si=document.createElement('input');si.type='text';si.setAttribute('list','tl-weeks');
-    si.value=dayToWeek(startDay);si.placeholder='Start';si.style.color=c.tx;
+    si.value=dayToDate(startDay);si.placeholder='Sep 1';si.style.color=c.tx;
     const sep2=document.createElement('span');sep2.className='dsep';sep2.textContent='→';sep2.style.color=c.tx;
     const ei=document.createElement('input');ei.type='text';ei.setAttribute('list','tl-weeks');
-    ei.value=dayToWeek(Math.max(startDay,endDay));ei.placeholder='End';ei.style.color=c.tx;
+    ei.value=dayToDate(endDay);ei.placeholder='Sep 7';ei.style.color=c.tx;
     function applyDates(){
-      const sv=WEEK_DAY[si.value.trim()],ev=WEEK_DAY[ei.value.trim()];
+      const sv=dateToDay(si.value),ev=dateToDay(ei.value);
       if(sv!=null&&ev!=null&&ev>=sv){
-        u.tlOffset=sv-uDayCol;u.tlSpan=ev-sv+7;render();saveState();
+        u.tlOffset=sv-uDayCol;u.tlSpan=ev-sv+1;render();saveState();
       }
     }
     [si,ei].forEach(inp=>{
@@ -443,11 +475,14 @@ function showDet(u){
   const c=pal(u);
   const det=document.getElementById('det');
   det.className='det op';
+  const uDayCol2=(colOf(u)||0)*7,tlOff2=u.tlOffset||0,tlSpan2=u.tlSpan||7;
+  const detStart=dayToDate(uDayCol2+tlOff2),detEnd=dayToDate(uDayCol2+tlOff2+tlSpan2-1);
   det.innerHTML=
     '<div class="det-hdr">'
     +'<div><div class="det-title" style="color:'+c.tx+'">'+u.title+'</div>'
     +(u.sub?'<div class="det-sub">'+u.sub+'</div>':'')+'</div>'
     +'<button onclick="closeDet()">&#x2715; Close</button></div>'
+    +'<div class="det-row"><span class="det-key">Dates</span><span class="det-val">'+detStart+' &rarr; '+detEnd+'</span></div>'
     +(u.skills?'<div class="det-row"><span class="det-key">Skills</span><span class="det-val">'+u.skills+'</span></div>':'')
     +(u.tools?'<div class="det-row"><span class="det-key">Tools</span><span class="det-val">'+u.tools+'</span></div>':'')
     +(u.notes?'<div class="det-row"><span class="det-key">Notes</span><span class="det-val">'+u.notes+'</span></div>':'')
