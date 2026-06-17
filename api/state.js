@@ -1,5 +1,6 @@
 const { Redis } = require('@upstash/redis');
 const Pusher = require('pusher');
+const { requireAuth } = require('../lib/auth');
 
 const redis = Redis.fromEnv();
 const pusher = new Pusher({
@@ -13,6 +14,7 @@ const pusher = new Pusher({
 const KEY = 'board';
 
 module.exports = async function handler(req, res) {
+  if (!requireAuth(req, res)) return;
   try {
     if (req.method === 'GET') {
       const data = await redis.get(KEY);

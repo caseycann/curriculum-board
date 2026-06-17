@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const { requireAuth } = require('../lib/auth');
 
 module.exports = function handler(req, res) {
+  if (!requireAuth(req, res)) return;
   const rawHtml = fs.readFileSync(path.join(process.cwd(), 'curriculum_board.html'), 'utf8');
   const sync = fs.readFileSync(path.join(process.cwd(), 'sync.js'), 'utf8');
 

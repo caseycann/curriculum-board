@@ -1,4 +1,7 @@
+const { requireAuth } = require('../lib/auth');
+
 module.exports = function handler(req, res) {
+  if (!requireAuth(req, res)) return;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
   res.send(HTML);
