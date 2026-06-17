@@ -362,7 +362,7 @@ function buildTimeline(){
     const uDayCol=colOf(u)*7,tlOff=u.tlOffset||0,tlSpan=u.tlSpan||7;
     return{u,start:uDayCol+tlOff,end:uDayCol+tlOff+tlSpan};
   });
-  const STACK_STEP=7;
+  const STACK_STEP=20; // tall enough that the back block's title line stays readable above the front block
   ranges.forEach((r,i)=>{
     let stack=0;
     for(let j=0;j<i;j++){
