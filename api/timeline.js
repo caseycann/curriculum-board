@@ -62,7 +62,8 @@ button.add:hover{background:#1d4f31}
 .rm{position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:50%;border:none;cursor:pointer;font-size:8px;display:flex;align-items:center;justify-content:center;opacity:0;background:rgba(0,0,0,.2);color:#fff;padding:0;line-height:1}
 .blk:hover .rm{opacity:1}
 /* Discipline fields */
-.df{position:absolute;top:5px;bottom:5px;border-radius:6px;border-width:1.5px;border-style:solid;display:flex;align-items:stretch;overflow:hidden;z-index:1}
+.df{position:absolute;top:5px;bottom:5px;border-radius:6px;border-width:1.5px;border-style:solid;display:flex;align-items:stretch;overflow:hidden;z-index:1;cursor:pointer}
+.df.active{box-shadow:0 0 0 2.5px #1F3864,0 2px 8px rgba(0,0,0,.12)}
 .df textarea{flex:1;font-size:9.5px;border:none;padding:4px 4px 4px 8px;font-family:inherit;background:transparent;line-height:1.4;resize:none;color:inherit;min-width:0}
 .df textarea:focus{outline:none;background:rgba(255,255,255,.5)}
 .lh,.rh{flex-shrink:0;width:8px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.05)}
@@ -194,6 +195,7 @@ const ORIG=[
 
 let units=ORIG.map(u=>({...u}));
 let nid=200,drag=null,lastVersion=null,resizing=null,detUid=null;
+let detDiscUid=null,detDiscDk=null;
 let editId=null,selPal=0;
 
 function pal(u){return PAL[u.pal||0];}
@@ -299,7 +301,14 @@ function oDS(e,uid){
 }
 function oDE(){document.querySelectorAll('.drag').forEach(el=>el.classList.remove('drag'));drag=null;}
 
-function render(){buildTimeline();buildPool();if(detUid){const u=units.find(x=>x.id===detUid);if(u)showDet(u);else closeDet();}}
+function render(){
+  buildTimeline();buildPool();
+  if(detUid){const u=units.find(x=>x.id===detUid);if(u)showDet(u);else closeDet();}
+  else if(detDiscUid){
+    const u=units.find(x=>x.id===detDiscUid);
+    if(u&&u.discFields&&u.discFields[detDiscDk])showDiscDet(u,detDiscDk);else closeDet();
+  }
+}
 
 function buildTimeline(){
   const tl=document.getElementById('tl');tl.innerHTML='';
@@ -412,7 +421,8 @@ function buildTimeline(){
       if(!df.enabled)return; // only show enabled disciplines
       const uCol=colOf(u),c=pal(u),pos=dfPos(u,dk),p2=pctD(pos.sc,pos.span);
       const wrap=document.createElement('div');
-      wrap.className='df';wrap.dataset.uid=u.id;wrap.dataset.dk=dk;
+      wrap.className='df'+(detDiscUid===u.id&&detDiscDk===dk?' active':'');
+      wrap.dataset.uid=u.id;wrap.dataset.dk=dk;
       wrap.style.left=p2.l;wrap.style.width=p2.w;
       wrap.style.background=info.bg;wrap.style.borderColor=info.bd;wrap.style.color=info.tx;
       wrap.style.zIndex='1';
@@ -420,12 +430,17 @@ function buildTimeline(){
         document.querySelectorAll('.df[data-dk="'+dk+'"]').forEach(el=>el.style.zIndex='1');
         wrap.style.zIndex='20';
       });
+      wrap.addEventListener('click',e=>{
+        if(e.target.classList.contains('lh')||e.target.classList.contains('rh'))return;
+        showDiscDet(u,dk);
+      });
 
       const lh=document.createElement('div');lh.className='lh';
       lh.addEventListener('pointerdown',e=>{
         e.preventDefault();e.stopPropagation();lh.setPointerCapture(e.pointerId);
         resizing={type:'disc',side:'left',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||7};
       });
+      lh.addEventListener('click',e=>e.stopPropagation());
       wrap.appendChild(lh);
 
       // Project identifier label
@@ -433,14 +448,10 @@ function buildTimeline(){
       projLbl.textContent=u.title;projLbl.style.color=c.tx;
       wrap.appendChild(projLbl);
 
+      // Read-only preview — full editing happens in the inspector panel
       const ta=document.createElement('textarea');
-      ta.placeholder='Notes...';ta.value=df.notes||'';
-      ta.addEventListener('input',()=>{df.notes=ta.value;});
-      ta.addEventListener('blur',()=>queueSave());
-      ta.addEventListener('focus',()=>{
-        document.querySelectorAll('.df[data-dk="'+dk+'"]').forEach(el=>el.style.zIndex='1');
-        wrap.style.zIndex='20';
-      });
+      ta.placeholder='Click to add notes...';ta.value=df.notes||'';
+      ta.readOnly=true;ta.tabIndex=-1;ta.style.cursor='pointer';
       wrap.appendChild(ta);
 
       const rh=document.createElement('div');rh.className='rh';
@@ -448,6 +459,7 @@ function buildTimeline(){
         e.preventDefault();e.stopPropagation();rh.setPointerCapture(e.pointerId);
         resizing={type:'disc',side:'right',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||7};
       });
+      rh.addEventListener('click',e=>e.stopPropagation());
       wrap.appendChild(rh);
       area.appendChild(wrap);
     });
@@ -457,7 +469,7 @@ function buildTimeline(){
 
 // Detail panel
 function showDet(u){
-  detUid=u.id;
+  detUid=u.id;detDiscUid=null;detDiscDk=null;
   ensureDF(u);
   const c=pal(u);
   const det=document.getElementById('det');
@@ -525,10 +537,44 @@ function showDet(u){
   // Highlight the active block
   document.querySelectorAll('.blk').forEach(el=>el.classList.toggle('active',el.dataset.uid===u.id));
 }
-function closeDet(){
-  detUid=null;
-  document.getElementById('det').className='det';
+
+// Discipline note inspector
+function showDiscDet(u,dk){
+  ensureDF(u);
+  detUid=null;detDiscUid=u.id;detDiscDk=dk;
+  const info=DC[dk],df=u.discFields[dk];
+  const det=document.getElementById('det');
+  det.className='det op';
+  det.innerHTML=
+    '<div class="det-hdr">'
+    +'<div><div class="det-title" style="color:'+info.tx+'">'+info.label+' Notes</div>'
+    +'<div class="det-sub">'+u.title+'</div></div>'
+    +'<button onclick="closeDet()">&#x2715; Close</button></div>'
+    +'<div id="det-disc-ta-wrap"></div>'
+    +'<div class="det-btns"><button style="margin-left:auto" onclick="closeDet()">Close</button></div>';
+
+  const wrap=document.getElementById('det-disc-ta-wrap');
+  const ta=document.createElement('textarea');
+  ta.value=df.notes||'';
+  ta.placeholder='Notes for '+info.label+'...';
+  ta.style.cssText='width:100%;min-height:140px;margin-top:4px;font-size:12.5px;border:1px solid #D5D3CE;border-radius:7px;padding:10px;font-family:inherit;background:#FAFAF8;color:#222;resize:vertical';
+  ta.addEventListener('input',()=>{
+    df.notes=ta.value;
+    const inlineTa=document.querySelector('.df[data-uid="'+u.id+'"][data-dk="'+dk+'"] textarea');
+    if(inlineTa)inlineTa.value=ta.value;
+  });
+  ta.addEventListener('blur',()=>queueSave());
+  wrap.appendChild(ta);
+  setTimeout(()=>ta.focus(),50);
+
+  document.querySelectorAll('.df').forEach(el=>el.classList.toggle('active',el.dataset.uid===u.id&&el.dataset.dk===dk));
   document.querySelectorAll('.blk.active').forEach(el=>el.classList.remove('active'));
+}
+
+function closeDet(){
+  detUid=null;detDiscUid=null;detDiscDk=null;
+  document.getElementById('det').className='det';
+  document.querySelectorAll('.blk.active,.df.active').forEach(el=>el.classList.remove('active'));
 }
 
 // Resize — pointermove/pointerup so setPointerCapture keeps events
