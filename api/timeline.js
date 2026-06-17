@@ -198,13 +198,7 @@ function pctD(dayCol,daySpan){daySpan=daySpan||7;return{l:(dayCol/TOTAL_DAYS*100
 function ensureDF(u){
   if(!u.discFields)u.discFields={};
   DISCS.forEach(dk=>{
-    if(!u.discFields[dk]){
-      u.discFields[dk]={enabled:!!(u.disc&&u.disc.includes(dk)),notes:'',offset:0,span:7};
-    } else if(u.discFields[dk].span>0&&u.discFields[dk].span<=TOTAL){
-      // Migrate old week-based values to days
-      u.discFields[dk].offset=(u.discFields[dk].offset||0)*7;
-      u.discFields[dk].span*=7;
-    }
+    if(!u.discFields[dk])u.discFields[dk]={enabled:!!(u.disc&&u.disc.includes(dk)),notes:'',offset:0,span:7};
   });
 }
 function dfPos(u,dk){
