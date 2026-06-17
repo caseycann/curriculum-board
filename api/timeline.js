@@ -23,6 +23,10 @@ button.add{background:#2A6B45;color:#fff;border-color:#2A6B45;font-weight:600}
 button.add:hover{background:#1d4f31}
 .main{padding:20px 24px}
 .tl-wrap{overflow-x:scroll;padding-bottom:4px;min-width:0}
+.tl-wrap::-webkit-scrollbar{height:8px;display:block}
+.tl-wrap::-webkit-scrollbar-track{background:#ECEAE6;border-radius:4px}
+.tl-wrap::-webkit-scrollbar-thumb{background:#B5B3AE;border-radius:4px}
+.tl-wrap::-webkit-scrollbar-thumb:hover{background:#888}
 .tl-table{width:100%}
 .hdr-row{display:flex;height:22px}
 .hdr-lbl{width:70px;flex-shrink:0}
