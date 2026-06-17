@@ -40,29 +40,34 @@ button.add:hover{background:#1d4f31}
 .proj-drop{position:absolute;top:0;bottom:0;left:0;right:0}
 .proj-drop.dov{background:rgba(46,117,182,.08)}
 /* Project blocks */
-.blk{position:absolute;top:5px;border-radius:6px;padding:5px 18px 5px 7px;border-width:1.5px;border-style:solid;cursor:pointer;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:opacity .1s,box-shadow .1s;min-height:50px}
+/* Project blocks use flex so handles sit flush on left/right with no position conflicts */
+.blk{position:absolute;top:5px;display:flex;align-items:stretch;border-radius:6px;border-width:1.5px;border-style:solid;cursor:pointer;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:opacity .1s,box-shadow .1s;overflow:hidden}
 .blk:hover{box-shadow:0 2px 8px rgba(0,0,0,.14)}
 .blk.drag{opacity:.3;cursor:grabbing}
 .blk.active{box-shadow:0 0 0 2.5px #1F3864,0 2px 8px rgba(0,0,0,.12)}
+/* Project block resize handles — flex children, always full height, no conflicts */
+.plh,.prh{width:9px;flex-shrink:0;cursor:ew-resize;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.07)}
+.plh{border-radius:5px 0 0 5px}.prh{border-radius:0 5px 5px 0}
+.plh::after,.prh::after{content:'';width:2px;height:16px;background:rgba(0,0,0,.22);border-radius:1px}
+.plh:hover,.prh:hover{background:rgba(0,0,0,.14)}
+/* Block content body */
+.blk-body{flex:1;min-width:0;padding:5px 20px 5px 4px;position:relative}
 .bt{font-size:9.5px;font-weight:600;line-height:1.3}
-.bs{font-size:8px;opacity:.7;margin-top:2px;line-height:1.2}
+.bs{font-size:8px;opacity:.7;margin-top:1px;line-height:1.2}
+.blk-dates{display:flex;align-items:center;gap:3px;margin-top:4px}
+.blk-dates input{font-size:8px;border:none;background:rgba(0,0,0,.08);border-radius:3px;padding:1px 4px;width:43px;font-family:inherit;color:inherit;cursor:text}
+.blk-dates input:focus{outline:none;background:rgba(0,0,0,.14)}
+.blk-dates .dsep{font-size:8px;opacity:.5;flex-shrink:0}
 .rm{position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:50%;border:none;cursor:pointer;font-size:8px;display:flex;align-items:center;justify-content:center;opacity:0;background:rgba(0,0,0,.2);color:#fff;padding:0;line-height:1}
 .blk:hover .rm{opacity:1}
-/* Discipline fields — simplified: no header, just textarea + handles */
+/* Discipline fields */
 .df{position:absolute;top:5px;bottom:5px;border-radius:6px;border-width:1.5px;border-style:solid;display:flex;align-items:stretch;overflow:hidden;z-index:1}
 .df textarea{flex:1;font-size:9.5px;border:none;padding:4px 4px 4px 8px;font-family:inherit;background:transparent;line-height:1.4;resize:none;color:inherit;min-width:0}
 .df textarea:focus{outline:none;background:rgba(255,255,255,.5)}
 .lh,.rh{flex-shrink:0;width:8px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.05)}
 .lh::after,.rh::after{content:'';width:2px;height:14px;background:rgba(0,0,0,.25);border-radius:1px}
 .lh:hover,.rh:hover{background:rgba(0,0,0,.1)}
-/* Project block resize handles */
-.plh,.prh{position:absolute;top:0;bottom:0;width:9px;cursor:ew-resize;z-index:3;display:flex;align-items:center;justify-content:center}
-.plh{left:0;border-radius:6px 0 0 6px;background:rgba(0,0,0,.06)}
-.prh{right:0;border-radius:0 6px 6px 0;background:rgba(0,0,0,.06)}
-.plh::after,.prh::after{content:'';width:2px;height:14px;background:rgba(0,0,0,.22);border-radius:1px}
-.plh:hover,.prh:hover{background:rgba(0,0,0,.14)}
-/* Discipline field project label */
-.df-proj{font-size:7.5px;font-weight:700;padding:1px 8px 1px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;opacity:.7;border-bottom:1px solid rgba(0,0,0,.08);letter-spacing:.01em}
+.df-proj{font-size:7.5px;font-weight:700;padding:1px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;opacity:.7;border-bottom:1px solid rgba(0,0,0,.08)}
 /* Detail panel */
 .det{display:none;background:#fff;border-radius:10px;border:1px solid #E0DED9;padding:16px 20px;margin-top:14px;box-shadow:0 2px 10px rgba(0,0,0,.08);font-size:12px}
 .det.op{display:block}
@@ -123,6 +128,7 @@ button.add:hover{background:#1d4f31}
     <div class="pool" id="pool"></div>
   </div>
 </div>
+<datalist id="tl-weeks"></datalist>
 <div class="modal-bg" id="mbg">
   <div class="modal">
     <h3 id="mtitle">New unit block</h3>
@@ -203,6 +209,10 @@ function colToTW(col){
 const TOTAL_DAYS=TOTAL*7; // 238 day-columns for sub-week precision
 function pct(col,span){span=span||1;return{l:(col/TOTAL*100)+'%',w:(span/TOTAL*100)+'%'};}
 function pctD(dayCol,daySpan){daySpan=daySpan||7;return{l:(dayCol/TOTAL_DAYS*100)+'%',w:(daySpan/TOTAL_DAYS*100)+'%'};}
+// Week label <-> day-index maps
+const WEEK_DAY={};const DAY_WEEK=[];
+(function(){let d=0;TERMS.forEach(t=>t.weeks.forEach(w=>{WEEK_DAY[w]=d;DAY_WEEK.push(w);d+=7;}));})();
+function dayToWeek(day){return DAY_WEEK[Math.max(0,Math.min(DAY_WEEK.length-1,Math.floor(day/7)))]||'';}
 function ensureDF(u){
   if(!u.discFields)u.discFields={};
   DISCS.forEach(dk=>{
@@ -297,26 +307,64 @@ function buildTimeline(){
     const col=colOf(u),c=pal(u);
     const uDayCol=col*7,tlOff=u.tlOffset||0,tlSpan=u.tlSpan||7;
     const p2=pctD(uDayCol+tlOff,tlSpan);
+    const startDay=uDayCol+tlOff, endDay=startDay+tlSpan-7;
+
     const blk=document.createElement('div');
     blk.className='blk'+(detUid===u.id?' active':'');
     blk.draggable=true;blk.dataset.uid=u.id;
-    blk.style.left=p2.l;blk.style.width=p2.w;blk.style.background=c.bg;blk.style.borderColor=c.bd;
-    blk.innerHTML='<div class="bt" style="color:'+c.tx+'">'+u.title+'</div><div class="bs" style="color:'+c.tx+'">'+u.sub+'</div><button class="rm">&#x2715;</button>';
-    blk.querySelector('.rm').onclick=e=>{e.stopPropagation();u.term=undefined;u.week=undefined;if(detUid===u.id)closeDet();render();saveState();};
-    // Left resize handle
+    blk.style.left=p2.l;blk.style.width=p2.w;
+    blk.style.background=c.bg;blk.style.borderColor=c.bd;
+
+    // Left resize handle (flex child — no position conflicts)
     const plh=document.createElement('div');plh.className='plh';
     plh.addEventListener('mousedown',e=>{e.preventDefault();e.stopPropagation();resizing={type:'proj',side:'left',uid:u.id,uDayCol,origOffset:tlOff,origSpan:tlSpan};});
     plh.addEventListener('click',e=>e.stopPropagation());
     blk.appendChild(plh);
-    // Right resize handle (left of the rm button)
+
+    // Content body
+    const body=document.createElement('div');body.className='blk-body';
+    body.innerHTML='<div class="bt" style="color:'+c.tx+'">'+u.title+'</div>'
+      +'<div class="bs" style="color:'+c.tx+'">'+(u.sub||'')+'</div>';
+    const rm=document.createElement('button');rm.className='rm';rm.innerHTML='&#x2715;';
+    rm.onclick=e=>{e.stopPropagation();u.term=undefined;u.week=undefined;if(detUid===u.id)closeDet();render();saveState();};
+    body.appendChild(rm);
+
+    // Date range inputs
+    const dv=document.createElement('div');dv.className='blk-dates';
+    const si=document.createElement('input');si.type='text';si.setAttribute('list','tl-weeks');
+    si.value=dayToWeek(startDay);si.placeholder='Start';si.style.color=c.tx;
+    const sep2=document.createElement('span');sep2.className='dsep';sep2.textContent='→';sep2.style.color=c.tx;
+    const ei=document.createElement('input');ei.type='text';ei.setAttribute('list','tl-weeks');
+    ei.value=dayToWeek(Math.max(startDay,endDay));ei.placeholder='End';ei.style.color=c.tx;
+    function applyDates(){
+      const sv=WEEK_DAY[si.value.trim()],ev=WEEK_DAY[ei.value.trim()];
+      if(sv!=null&&ev!=null&&ev>=sv){
+        u.tlOffset=sv-uDayCol;u.tlSpan=ev-sv+7;render();saveState();
+      }
+    }
+    [si,ei].forEach(inp=>{
+      inp.addEventListener('blur',applyDates);
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter')applyDates();});
+      inp.addEventListener('click',e=>e.stopPropagation());
+      inp.addEventListener('mousedown',e=>e.stopPropagation());
+    });
+    dv.appendChild(si);dv.appendChild(sep2);dv.appendChild(ei);
+    body.appendChild(dv);
+    blk.appendChild(body);
+
+    // Right resize handle (flex child — sits flush at right edge)
     const prh=document.createElement('div');prh.className='prh';
-    prh.style.right='18px'; // avoid overlapping rm button
     prh.addEventListener('mousedown',e=>{e.preventDefault();e.stopPropagation();resizing={type:'proj',side:'right',uid:u.id,uDayCol,origOffset:tlOff,origSpan:tlSpan};});
     prh.addEventListener('click',e=>e.stopPropagation());
     blk.appendChild(prh);
+
     blk.addEventListener('dragstart',e=>{oDS(e,u.id);});
     blk.addEventListener('dragend',oDE);
-    blk.addEventListener('click',e=>{if(e.target.classList.contains('rm')||e.target.classList.contains('plh')||e.target.classList.contains('prh'))return;showDet(u);});
+    blk.addEventListener('click',e=>{
+      if(['rm','plh','prh'].some(cl=>e.target.classList.contains(cl)))return;
+      if(e.target.tagName==='INPUT'||e.target.tagName==='SPAN')return;
+      showDet(u);
+    });
     pra.appendChild(blk);
   });
   pr.appendChild(pra);tl.appendChild(pr);
@@ -537,6 +585,9 @@ document.getElementById('savebtn').addEventListener('click',()=>{
   closeMod();render();saveState();
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMod();closeDet();}});
+
+// Populate week datalist for date inputs
+(function(){const dl=document.getElementById('tl-weeks');if(dl)DAY_WEEK.forEach(w=>{const o=document.createElement('option');o.value=w;dl.appendChild(o);});})();
 
 (async function init(){
   try{const r=await fetch('/api/state');if(r.ok){const d=await r.json();if(d&&d.units){units=d.units;nid=d.nid||200;lastVersion=d.v||null;}}}catch(_){}
