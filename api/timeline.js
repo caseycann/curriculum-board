@@ -65,14 +65,17 @@ button.add:hover{background:#1d4f31}
 .rm{position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:50%;border:none;cursor:pointer;font-size:8px;display:flex;align-items:center;justify-content:center;opacity:0;background:rgba(0,0,0,.2);color:#fff;padding:0;line-height:1}
 .blk:hover .rm{opacity:1}
 /* Discipline fields */
-.df{position:absolute;top:5px;bottom:5px;border-radius:6px;border-width:1.5px;border-style:solid;display:flex;align-items:stretch;overflow:hidden;z-index:1;cursor:pointer}
+.df{position:absolute;top:5px;bottom:5px;border-radius:6px;border-width:1.5px;border-style:solid;display:flex;align-items:stretch;overflow:hidden;z-index:1;cursor:pointer;padding:0 8px}
 .df.active{box-shadow:0 0 0 2.5px #1F3864,0 2px 8px rgba(0,0,0,.12)}
 .df textarea{flex:1;font-size:9.5px;border:none;padding:4px 4px 4px 8px;font-family:inherit;background:transparent;line-height:1.4;resize:none;color:inherit;min-width:0}
 .df textarea:focus{outline:none;background:rgba(255,255,255,.5)}
-.lh,.rh{flex-shrink:0;width:8px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.05)}
+/* Handles are positioned absolutely (not flex children) so they always stay visible
+   and usable at the block edges, even when the block is too narrow for the content to fit */
+.lh,.rh{position:absolute;top:0;bottom:0;width:8px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.05);z-index:2}
+.lh{left:0}.rh{right:0}
 .lh::after,.rh::after{content:'';width:2px;height:14px;background:rgba(0,0,0,.25);border-radius:1px}
 .lh:hover,.rh:hover{background:rgba(0,0,0,.1)}
-.df-proj{font-size:7.5px;font-weight:700;padding:1px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;opacity:.7;border-bottom:1px solid rgba(0,0,0,.08)}
+.df-proj{font-size:7.5px;font-weight:700;padding:1px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;min-width:0;max-width:50%;opacity:.7;border-bottom:1px solid rgba(0,0,0,.08)}
 /* Detail panel */
 .det{display:none;background:#fff;border-radius:10px;border:1px solid #E0DED9;padding:16px 20px;margin-top:14px;box-shadow:0 2px 10px rgba(0,0,0,.08);font-size:12px}
 .det.op{display:block}
