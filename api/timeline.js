@@ -549,6 +549,7 @@ window.addEventListener('pointermove',e=>{
     else{newStart=Math.min(col,origEnd);newSpan=Math.max(1,origEnd-newStart+1);}
     const u=units.find(x=>x.id===uid);if(!u)return;
     u.tlOffset=newStart-uDayCol;u.tlSpan=newSpan;
+    console.log('[resize-debug]',{rWidth:r.width,clientX:e.clientX,rLeft:r.left,col,uDayCol,origOffset,origSpan,newStart,newSpan,tlSpan:u.tlSpan});
     const blkEl=document.querySelector('.blk[data-uid="'+uid+'"]');
     if(blkEl){
       const sc=Math.max(0,uDayCol+u.tlOffset),ec=Math.min(TOTAL_DAYS-1,sc+u.tlSpan-1);
