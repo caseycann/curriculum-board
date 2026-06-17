@@ -200,6 +200,7 @@ let units=ORIG.map(u=>({...u}));
 let nid=200,drag=null,lastVersion=null,resizing=null,detUid=null;
 let detDiscUid=null,detDiscDk=null;
 let editId=null,selPal=0;
+let blkZ={},blkZTop=10; // per-unit z-index memory so clicking a project block brings it to front
 
 function pal(u){return PAL[u.pal||0];}
 function colOf(u){
@@ -353,18 +354,40 @@ function buildTimeline(){
     u.term=tw.term;u.week=tw.week;ensureDF(u);render();saveState();
   });
   pra.appendChild(dz);
-  units.forEach(u=>{
-    if(u.term==null||u.week==null)return;
+
+  // Overlapping project blocks get cascaded so the ones "in back" still peek out
+  // and remain clickable instead of being fully hidden underneath later blocks.
+  const placed=units.filter(u=>u.term!=null&&u.week!=null);
+  const ranges=placed.map(u=>{
+    const uDayCol=colOf(u)*7,tlOff=u.tlOffset||0,tlSpan=u.tlSpan||7;
+    return{u,start:uDayCol+tlOff,end:uDayCol+tlOff+tlSpan};
+  });
+  const STACK_STEP=7;
+  ranges.forEach((r,i)=>{
+    let stack=0;
+    for(let j=0;j<i;j++){
+      if(ranges[j].start<r.end&&r.start<ranges[j].end)stack=Math.max(stack,ranges[j].stack+1);
+    }
+    r.stack=stack;
+  });
+  const maxStack=ranges.reduce((m,r)=>Math.max(m,r.stack),0);
+  pra.style.minHeight=(108+maxStack*STACK_STEP*2)+'px';
+
+  ranges.forEach(({u,start:startDay,end:endDay,stack})=>{
     const col=colOf(u),c=pal(u);
     const uDayCol=col*7,tlOff=u.tlOffset||0,tlSpan=u.tlSpan||7;
     const p2=pctD(uDayCol+tlOff,tlSpan);
-    const startDay=uDayCol+tlOff, endDay=startDay+tlSpan; // exclusive end
 
     const blk=document.createElement('div');
     blk.className='blk'+(detUid===u.id?' active':'');
     blk.draggable=true;blk.dataset.uid=u.id;
     blk.style.left=p2.l;blk.style.width=p2.w;
+    blk.style.top=(5+stack*STACK_STEP)+'px';
+    blk.style.zIndex=blkZ[u.id]||(stack+1);
     blk.style.background=c.bg;blk.style.borderColor=c.bd;
+    blk.addEventListener('mousedown',()=>{
+      blkZTop++;blkZ[u.id]=blkZTop;blk.style.zIndex=blkZTop;
+    });
 
     // Left resize handle — pointerdown+setPointerCapture bypasses HTML drag entirely
     const plh=document.createElement('div');plh.className='plh';
