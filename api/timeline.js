@@ -287,7 +287,7 @@ function buildTimeline(){
   // Project row
   const pr=document.createElement('div');pr.className='data-row';
   pr.appendChild(Object.assign(document.createElement('div'),{className:'row-lbl proj',textContent:'Project'}));
-  const pra=document.createElement('div');pra.className='row-area';pra.style.minHeight='70px';
+  const pra=document.createElement('div');pra.className='row-area';pra.style.minHeight='108px';
   pra.dataset.type='project';
   buildBg(pra);
   const dz=document.createElement('div');dz.className='proj-drop';
