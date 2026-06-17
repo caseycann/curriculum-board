@@ -23,7 +23,7 @@ button.add{background:#2A6B45;color:#fff;border-color:#2A6B45;font-weight:600}
 button.add:hover{background:#1d4f31}
 .main{padding:20px 24px}
 .tl-wrap{overflow-x:auto;padding-bottom:4px;min-width:0}
-.tl-table{min-width:900px;width:100%}
+.tl-table{width:100%}
 .hdr-row{display:flex;height:22px}
 .hdr-lbl{width:70px;flex-shrink:0}
 .hdr-area{flex:1;display:flex}
@@ -266,6 +266,8 @@ function render(){buildTimeline();buildPool();if(detUid){const u=units.find(x=>x
 
 function buildTimeline(){
   const tl=document.getElementById('tl');tl.innerHTML='';
+  // 70px for row labels + 65px per week column → each block always has readable width
+  tl.style.minWidth=(70+TOTAL*65)+'px';
 
   const th=document.createElement('div');th.className='hdr-row';
   th.appendChild(Object.assign(document.createElement('div'),{className:'hdr-lbl'}));
