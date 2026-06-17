@@ -58,10 +58,7 @@ button.add:hover{background:#1d4f31}
 .blk-body{flex:1;min-width:0;padding:5px 20px 5px 4px;position:relative}
 .bt{font-size:9.5px;font-weight:600;line-height:1.3}
 .bs{font-size:8px;opacity:.7;margin-top:1px;line-height:1.2}
-.blk-dates{display:flex;align-items:center;gap:3px;margin-top:4px}
-.blk-dates input{font-size:8px;border:none;background:rgba(0,0,0,.08);border-radius:3px;padding:1px 4px;width:43px;font-family:inherit;color:inherit;cursor:text}
-.blk-dates input:focus{outline:none;background:rgba(0,0,0,.14)}
-.blk-dates .dsep{font-size:8px;opacity:.5;flex-shrink:0}
+.blk-dates{font-size:8px;margin-top:4px;opacity:.75}
 .rm{position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:50%;border:none;cursor:pointer;font-size:8px;display:flex;align-items:center;justify-content:center;opacity:0;background:rgba(0,0,0,.2);color:#fff;padding:0;line-height:1}
 .blk:hover .rm{opacity:1}
 /* Discipline fields */
@@ -345,7 +342,7 @@ function buildTimeline(){
     const col=colOf(u),c=pal(u);
     const uDayCol=col*7,tlOff=u.tlOffset||0,tlSpan=u.tlSpan||7;
     const p2=pctD(uDayCol+tlOff,tlSpan);
-    const startDay=uDayCol+tlOff, endDay=startDay+tlSpan-1;
+    const startDay=uDayCol+tlOff, endDay=startDay+tlSpan; // exclusive end
 
     const blk=document.createElement('div');
     blk.className='blk'+(detUid===u.id?' active':'');
@@ -367,26 +364,10 @@ function buildTimeline(){
     rm.onclick=e=>{e.stopPropagation();u.term=undefined;u.week=undefined;if(detUid===u.id)closeDet();render();saveState();};
     body.appendChild(rm);
 
-    // Date range inputs
+    // Date range — read-only display; editing happens in the inspector panel
     const dv=document.createElement('div');dv.className='blk-dates';
-    const si=document.createElement('input');si.type='text';si.setAttribute('list','tl-weeks');
-    si.value=dayToDate(startDay);si.placeholder='Sep 1';si.style.color=c.tx;
-    const sep2=document.createElement('span');sep2.className='dsep';sep2.textContent='→';sep2.style.color=c.tx;
-    const ei=document.createElement('input');ei.type='text';ei.setAttribute('list','tl-weeks');
-    ei.value=dayToDate(endDay);ei.placeholder='Sep 7';ei.style.color=c.tx;
-    function applyDates(){
-      const sv=dateToDay(si.value),ev=dateToDay(ei.value);
-      if(sv!=null&&ev!=null&&ev>=sv){
-        u.tlOffset=sv-uDayCol;u.tlSpan=ev-sv+1;render();saveState();
-      }
-    }
-    [si,ei].forEach(inp=>{
-      inp.addEventListener('blur',applyDates);
-      inp.addEventListener('keydown',e=>{if(e.key==='Enter')applyDates();});
-      inp.addEventListener('click',e=>e.stopPropagation());
-      inp.addEventListener('mousedown',e=>e.stopPropagation());
-    });
-    dv.appendChild(si);dv.appendChild(sep2);dv.appendChild(ei);
+    dv.style.color=c.tx;
+    dv.textContent=dayToDate(startDay)+' → '+dayToDate(endDay);
     body.appendChild(dv);
     blk.appendChild(body);
 
@@ -400,7 +381,6 @@ function buildTimeline(){
     blk.addEventListener('dragend',oDE);
     blk.addEventListener('click',e=>{
       if(['rm','plh','prh'].some(cl=>e.target.classList.contains(cl)))return;
-      if(e.target.tagName==='INPUT'||e.target.tagName==='SPAN')return;
       showDet(u);
     });
     pra.appendChild(blk);
@@ -476,13 +456,13 @@ function showDet(u){
   const det=document.getElementById('det');
   det.className='det op';
   const uDayCol2=(colOf(u)||0)*7,tlOff2=u.tlOffset||0,tlSpan2=u.tlSpan||7;
-  const detStart=dayToDate(uDayCol2+tlOff2),detEnd=dayToDate(uDayCol2+tlOff2+tlSpan2-1);
+  const detStartDay=uDayCol2+tlOff2, detEndDay=detStartDay+tlSpan2; // exclusive
   det.innerHTML=
     '<div class="det-hdr">'
     +'<div><div class="det-title" style="color:'+c.tx+'">'+u.title+'</div>'
     +(u.sub?'<div class="det-sub">'+u.sub+'</div>':'')+'</div>'
     +'<button onclick="closeDet()">&#x2715; Close</button></div>'
-    +'<div class="det-row"><span class="det-key">Dates</span><span class="det-val">'+detStart+' &rarr; '+detEnd+'</span></div>'
+    +'<div class="det-row" id="det-dates-row"><span class="det-key">Dates</span></div>'
     +(u.skills?'<div class="det-row"><span class="det-key">Skills</span><span class="det-val">'+u.skills+'</span></div>':'')
     +(u.tools?'<div class="det-row"><span class="det-key">Tools</span><span class="det-val">'+u.tools+'</span></div>':'')
     +(u.notes?'<div class="det-row"><span class="det-key">Notes</span><span class="det-val">'+u.notes+'</span></div>':'')
@@ -490,8 +470,31 @@ function showDet(u){
     +'<div class="det-btns"><button id="det-edit-btn">&#x270F; Edit block</button>'
     +'<button style="margin-left:auto" onclick="closeDet()">Close</button></div>';
 
-  // Attach edit handler via listener (avoids quote-escaping issues with inline onclick)
   document.getElementById('det-edit-btn').addEventListener('click', function(){openMod(u.id);});
+
+  // Build editable date inputs in the Dates row
+  const datesRow=document.getElementById('det-dates-row');
+  const dv=document.createElement('div');
+  dv.style.cssText='display:flex;align-items:center;gap:6px;flex:1';
+  const si=document.createElement('input');si.type='text';si.setAttribute('list','tl-weeks');
+  si.value=dayToDate(detStartDay);
+  si.style.cssText='font-size:11.5px;border:1px solid #D5D3CE;border-radius:5px;padding:3px 7px;width:72px;font-family:inherit;background:#FAFAF8;color:#222';
+  const arr=document.createElement('span');arr.textContent='→';arr.style.cssText='opacity:.5;font-size:12px';
+  const ei=document.createElement('input');ei.type='text';ei.setAttribute('list','tl-weeks');
+  ei.value=dayToDate(detEndDay);
+  ei.style.cssText=si.style.cssText;
+  function applyDetDates(){
+    const sv=dateToDay(si.value),ev=dateToDay(ei.value);
+    if(sv!=null&&ev!=null&&ev>sv){
+      u.tlOffset=sv-uDayCol2;u.tlSpan=ev-sv;render();saveState();
+    }
+  }
+  [si,ei].forEach(inp=>{
+    inp.addEventListener('blur',applyDetDates);
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')applyDetDates();});
+  });
+  dv.appendChild(si);dv.appendChild(arr);dv.appendChild(ei);
+  datesRow.appendChild(dv);
 
   const discsEl=document.getElementById('det-discs');
   DISCS.forEach(dk=>{
