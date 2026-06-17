@@ -34,7 +34,8 @@ button.add:hover{background:#1d4f31}
 .row-lbl.proj{color:#4a30a0;font-size:9px}
 .row-area{flex:1;position:relative;min-height:60px}
 .band{position:absolute;top:0;bottom:0;pointer-events:none}
-.wline{position:absolute;top:0;bottom:0;width:1px;background:rgba(0,0,0,.04);pointer-events:none}
+.dline{position:absolute;top:0;bottom:0;width:1px;background:rgba(0,0,0,.02);pointer-events:none}
+.wline{position:absolute;top:0;bottom:0;width:1px;background:rgba(0,0,0,.06);pointer-events:none}
 .tline{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.09);pointer-events:none}
 .proj-drop{position:absolute;top:0;bottom:0;left:0;right:0}
 .proj-drop.dov{background:rgba(46,117,182,.08)}
@@ -191,17 +192,25 @@ function colToTW(col){
   for(let i=0;i<TERMS.length;i++){if(r<TERMS[i].weeks.length)return{term:i,week:r};r-=TERMS[i].weeks.length;}
   return null;
 }
+const TOTAL_DAYS=TOTAL*7; // 238 day-columns for sub-week precision
 function pct(col,span){span=span||1;return{l:(col/TOTAL*100)+'%',w:(span/TOTAL*100)+'%'};}
+function pctD(dayCol,daySpan){daySpan=daySpan||7;return{l:(dayCol/TOTAL_DAYS*100)+'%',w:(daySpan/TOTAL_DAYS*100)+'%'};}
 function ensureDF(u){
   if(!u.discFields)u.discFields={};
   DISCS.forEach(dk=>{
-    if(!u.discFields[dk])u.discFields[dk]={enabled:!!(u.disc&&u.disc.includes(dk)),notes:'',offset:0,span:1};
+    if(!u.discFields[dk]){
+      u.discFields[dk]={enabled:!!(u.disc&&u.disc.includes(dk)),notes:'',offset:0,span:7};
+    } else if(u.discFields[dk].span>0&&u.discFields[dk].span<=TOTAL){
+      // Migrate old week-based values to days
+      u.discFields[dk].offset=(u.discFields[dk].offset||0)*7;
+      u.discFields[dk].span*=7;
+    }
   });
 }
 function dfPos(u,dk){
-  const df=u.discFields[dk],uCol=colOf(u);
-  const sc=Math.max(0,uCol+(df.offset||0));
-  const ec=Math.min(TOTAL-1,sc+(df.span||1)-1);
+  const df=u.discFields[dk],uDayCol=colOf(u)*7;
+  const sc=Math.max(0,uDayCol+(df.offset||0));
+  const ec=Math.min(TOTAL_DAYS-1,sc+(df.span||7)-1);
   return{sc,ec,span:ec-sc+1};
 }
 
@@ -212,6 +221,14 @@ function buildBg(el){
     const b=document.createElement('div');b.className='band';
     b.style.left=(off/TOTAL*100)+'%';b.style.width=(w/TOTAL*100)+'%';b.style.background=t.light;
     el.appendChild(b);
+    // Day tick marks within each week (faint)
+    for(let wi=0;wi<w;wi++){
+      for(let di=1;di<7;di++){
+        const dl=document.createElement('div');dl.className='dline';
+        dl.style.left=((off+wi+di/7)/TOTAL*100)+'%';el.appendChild(dl);
+      }
+    }
+    // Week boundary lines
     for(let wi=1;wi<w;wi++){
       const l=document.createElement('div');l.className='wline';l.style.left=((off+wi)/TOTAL*100)+'%';el.appendChild(l);
     }
@@ -304,7 +321,7 @@ function buildTimeline(){
       ensureDF(u);
       const df=u.discFields[dk];
       if(!df.enabled)return; // only show enabled disciplines
-      const uCol=colOf(u),pos=dfPos(u,dk),p2=pct(pos.sc,pos.span);
+      const uCol=colOf(u),pos=dfPos(u,dk),p2=pctD(pos.sc,pos.span);
       const wrap=document.createElement('div');
       wrap.className='df';wrap.dataset.uid=u.id;wrap.dataset.dk=dk;
       wrap.style.left=p2.l;wrap.style.width=p2.w;
@@ -318,7 +335,7 @@ function buildTimeline(){
       const lh=document.createElement('div');lh.className='lh';
       lh.addEventListener('mousedown',e=>{
         e.preventDefault();e.stopPropagation();
-        resizing={side:'left',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||1};
+        resizing={side:'left',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||7};
       });
       wrap.appendChild(lh);
 
@@ -335,7 +352,7 @@ function buildTimeline(){
       const rh=document.createElement('div');rh.className='rh';
       rh.addEventListener('mousedown',e=>{
         e.preventDefault();e.stopPropagation();
-        resizing={side:'right',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||1};
+        resizing={side:'right',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||7};
       });
       wrap.appendChild(rh);
       area.appendChild(wrap);
@@ -401,17 +418,19 @@ window.addEventListener('mousemove',e=>{
   const areaEl=document.querySelector('.row-area[data-dk="'+dk+'"]');
   if(!areaEl)return;
   const r=areaEl.getBoundingClientRect();if(!r.width)return;
-  const col=Math.max(0,Math.min(TOTAL-1,Math.floor((e.clientX-r.left)/r.width*TOTAL)));
-  const origStart=uCol+origOffset,origEnd=origStart+origSpan-1;
+  // Day-level column (0 – TOTAL_DAYS-1) for sub-week snapping
+  const col=Math.max(0,Math.min(TOTAL_DAYS-1,Math.floor((e.clientX-r.left)/r.width*TOTAL_DAYS)));
+  const uDayCol=uCol*7;
+  const origStart=uDayCol+origOffset,origEnd=origStart+origSpan-1;
   let newStart,newSpan;
   if(side==='right'){newStart=origStart;newSpan=Math.max(1,col-origStart+1);}
   else{newStart=Math.min(col,origEnd);newSpan=Math.max(1,origEnd-newStart+1);}
   const u=units.find(x=>x.id===uid);if(!u||!u.discFields)return;
-  const df=u.discFields[dk];df.offset=newStart-uCol;df.span=newSpan;
+  const df=u.discFields[dk];df.offset=newStart-uDayCol;df.span=newSpan;
   const dfEl=document.querySelector('.df[data-uid="'+uid+'"][data-dk="'+dk+'"]');
   if(dfEl){
-    const sc=Math.max(0,uCol+df.offset),ec=Math.min(TOTAL-1,sc+df.span-1);
-    const p2=pct(sc,ec-sc+1);dfEl.style.left=p2.l;dfEl.style.width=p2.w;
+    const sc=Math.max(0,uDayCol+df.offset),ec=Math.min(TOTAL_DAYS-1,sc+df.span-1);
+    const p2=pctD(sc,ec-sc+1);dfEl.style.left=p2.l;dfEl.style.width=p2.w;
   }
 });
 window.addEventListener('mouseup',()=>{if(resizing){resizing=null;saveState();render();}});
