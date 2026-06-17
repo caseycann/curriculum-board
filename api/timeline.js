@@ -360,8 +360,11 @@ function showDet(u){
     +(u.tools?'<div class="det-row"><span class="det-key">Tools</span><span class="det-val">'+u.tools+'</span></div>':'')
     +(u.notes?'<div class="det-row"><span class="det-key">Notes</span><span class="det-val">'+u.notes+'</span></div>':'')
     +'<div class="det-discs" id="det-discs"></div>'
-    +'<div class="det-btns"><button onclick="openMod(\''+u.id+'\')">&#x270F; Edit block</button>'
+    +'<div class="det-btns"><button id="det-edit-btn">&#x270F; Edit block</button>'
     +'<button style="margin-left:auto" onclick="closeDet()">Close</button></div>';
+
+  // Attach edit handler via listener (avoids quote-escaping issues with inline onclick)
+  document.getElementById('det-edit-btn').addEventListener('click', function(){openMod(u.id);});
 
   const discsEl=document.getElementById('det-discs');
   DISCS.forEach(dk=>{
