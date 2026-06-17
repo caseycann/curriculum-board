@@ -271,7 +271,7 @@ function render(){buildTimeline();buildPool();if(detUid){const u=units.find(x=>x
 function buildTimeline(){
   const tl=document.getElementById('tl');tl.innerHTML='';
   // 70px for row labels + 65px per week column → each block always has readable width
-  tl.style.minWidth=(70+TOTAL*65)+'px';
+  tl.style.minWidth=(70+TOTAL*130)+'px';
 
   const th=document.createElement('div');th.className='hdr-row';
   th.appendChild(Object.assign(document.createElement('div'),{className:'hdr-lbl'}));
