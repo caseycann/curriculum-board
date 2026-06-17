@@ -55,6 +55,14 @@ button.add:hover{background:#1d4f31}
 .lh,.rh{flex-shrink:0;width:8px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.05)}
 .lh::after,.rh::after{content:'';width:2px;height:14px;background:rgba(0,0,0,.25);border-radius:1px}
 .lh:hover,.rh:hover{background:rgba(0,0,0,.1)}
+/* Project block resize handles */
+.plh,.prh{position:absolute;top:0;bottom:0;width:9px;cursor:ew-resize;z-index:3;display:flex;align-items:center;justify-content:center}
+.plh{left:0;border-radius:6px 0 0 6px;background:rgba(0,0,0,.06)}
+.prh{right:0;border-radius:0 6px 6px 0;background:rgba(0,0,0,.06)}
+.plh::after,.prh::after{content:'';width:2px;height:14px;background:rgba(0,0,0,.22);border-radius:1px}
+.plh:hover,.prh:hover{background:rgba(0,0,0,.14)}
+/* Discipline field project label */
+.df-proj{font-size:7.5px;font-weight:700;padding:1px 8px 1px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;opacity:.7;border-bottom:1px solid rgba(0,0,0,.08);letter-spacing:.01em}
 /* Detail panel */
 .det{display:none;background:#fff;border-radius:10px;border:1px solid #E0DED9;padding:16px 20px;margin-top:14px;box-shadow:0 2px 10px rgba(0,0,0,.08);font-size:12px}
 .det.op{display:block}
@@ -270,6 +278,7 @@ function buildTimeline(){
   const pr=document.createElement('div');pr.className='data-row';
   pr.appendChild(Object.assign(document.createElement('div'),{className:'row-lbl proj',textContent:'Project'}));
   const pra=document.createElement('div');pra.className='row-area';pra.style.minHeight='70px';
+  pra.dataset.type='project';
   buildBg(pra);
   const dz=document.createElement('div');dz.className='proj-drop';
   dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dov');});
@@ -285,16 +294,29 @@ function buildTimeline(){
   pra.appendChild(dz);
   units.forEach(u=>{
     if(u.term==null||u.week==null)return;
-    const col=colOf(u),c=pal(u),p2=pct(col);
+    const col=colOf(u),c=pal(u);
+    const uDayCol=col*7,tlOff=u.tlOffset||0,tlSpan=u.tlSpan||7;
+    const p2=pctD(uDayCol+tlOff,tlSpan);
     const blk=document.createElement('div');
     blk.className='blk'+(detUid===u.id?' active':'');
     blk.draggable=true;blk.dataset.uid=u.id;
     blk.style.left=p2.l;blk.style.width=p2.w;blk.style.background=c.bg;blk.style.borderColor=c.bd;
     blk.innerHTML='<div class="bt" style="color:'+c.tx+'">'+u.title+'</div><div class="bs" style="color:'+c.tx+'">'+u.sub+'</div><button class="rm">&#x2715;</button>';
     blk.querySelector('.rm').onclick=e=>{e.stopPropagation();u.term=undefined;u.week=undefined;if(detUid===u.id)closeDet();render();saveState();};
+    // Left resize handle
+    const plh=document.createElement('div');plh.className='plh';
+    plh.addEventListener('mousedown',e=>{e.preventDefault();e.stopPropagation();resizing={type:'proj',side:'left',uid:u.id,uDayCol,origOffset:tlOff,origSpan:tlSpan};});
+    plh.addEventListener('click',e=>e.stopPropagation());
+    blk.appendChild(plh);
+    // Right resize handle (left of the rm button)
+    const prh=document.createElement('div');prh.className='prh';
+    prh.style.right='18px'; // avoid overlapping rm button
+    prh.addEventListener('mousedown',e=>{e.preventDefault();e.stopPropagation();resizing={type:'proj',side:'right',uid:u.id,uDayCol,origOffset:tlOff,origSpan:tlSpan};});
+    prh.addEventListener('click',e=>e.stopPropagation());
+    blk.appendChild(prh);
     blk.addEventListener('dragstart',e=>{oDS(e,u.id);});
     blk.addEventListener('dragend',oDE);
-    blk.addEventListener('click',e=>{if(e.target.classList.contains('rm'))return;showDet(u);});
+    blk.addEventListener('click',e=>{if(e.target.classList.contains('rm')||e.target.classList.contains('plh')||e.target.classList.contains('prh'))return;showDet(u);});
     pra.appendChild(blk);
   });
   pr.appendChild(pra);tl.appendChild(pr);
@@ -315,7 +337,7 @@ function buildTimeline(){
       ensureDF(u);
       const df=u.discFields[dk];
       if(!df.enabled)return; // only show enabled disciplines
-      const uCol=colOf(u),pos=dfPos(u,dk),p2=pctD(pos.sc,pos.span);
+      const uCol=colOf(u),c=pal(u),pos=dfPos(u,dk),p2=pctD(pos.sc,pos.span);
       const wrap=document.createElement('div');
       wrap.className='df';wrap.dataset.uid=u.id;wrap.dataset.dk=dk;
       wrap.style.left=p2.l;wrap.style.width=p2.w;
@@ -329,9 +351,14 @@ function buildTimeline(){
       const lh=document.createElement('div');lh.className='lh';
       lh.addEventListener('mousedown',e=>{
         e.preventDefault();e.stopPropagation();
-        resizing={side:'left',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||7};
+        resizing={type:'disc',side:'left',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||7};
       });
       wrap.appendChild(lh);
+
+      // Project identifier label
+      const projLbl=document.createElement('div');projLbl.className='df-proj';
+      projLbl.textContent=u.title;projLbl.style.color=c.tx;
+      wrap.appendChild(projLbl);
 
       const ta=document.createElement('textarea');
       ta.placeholder='Notes...';ta.value=df.notes||'';
@@ -346,7 +373,7 @@ function buildTimeline(){
       const rh=document.createElement('div');rh.className='rh';
       rh.addEventListener('mousedown',e=>{
         e.preventDefault();e.stopPropagation();
-        resizing={side:'right',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||7};
+        resizing={type:'disc',side:'right',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||7};
       });
       wrap.appendChild(rh);
       area.appendChild(wrap);
@@ -405,26 +432,46 @@ function closeDet(){
   document.querySelectorAll('.blk.active').forEach(el=>el.classList.remove('active'));
 }
 
-// Resize
+// Resize (project blocks and discipline fields)
 window.addEventListener('mousemove',e=>{
   if(!resizing)return;
-  const{side,uid,dk,uCol,origOffset,origSpan}=resizing;
-  const areaEl=document.querySelector('.row-area[data-dk="'+dk+'"]');
-  if(!areaEl)return;
-  const r=areaEl.getBoundingClientRect();if(!r.width)return;
-  // Day-level column (0 – TOTAL_DAYS-1) for sub-week snapping
-  const col=Math.max(0,Math.min(TOTAL_DAYS-1,Math.floor((e.clientX-r.left)/r.width*TOTAL_DAYS)));
-  const uDayCol=uCol*7;
-  const origStart=uDayCol+origOffset,origEnd=origStart+origSpan-1;
-  let newStart,newSpan;
-  if(side==='right'){newStart=origStart;newSpan=Math.max(1,col-origStart+1);}
-  else{newStart=Math.min(col,origEnd);newSpan=Math.max(1,origEnd-newStart+1);}
-  const u=units.find(x=>x.id===uid);if(!u||!u.discFields)return;
-  const df=u.discFields[dk];df.offset=newStart-uDayCol;df.span=newSpan;
-  const dfEl=document.querySelector('.df[data-uid="'+uid+'"][data-dk="'+dk+'"]');
-  if(dfEl){
-    const sc=Math.max(0,uDayCol+df.offset),ec=Math.min(TOTAL_DAYS-1,sc+df.span-1);
-    const p2=pctD(sc,ec-sc+1);dfEl.style.left=p2.l;dfEl.style.width=p2.w;
+  const{type,side,uid,origOffset,origSpan}=resizing;
+
+  if(type==='proj'){
+    const areaEl=document.querySelector('.row-area[data-type="project"]');
+    if(!areaEl)return;
+    const r=areaEl.getBoundingClientRect();if(!r.width)return;
+    const col=Math.max(0,Math.min(TOTAL_DAYS-1,Math.floor((e.clientX-r.left)/r.width*TOTAL_DAYS)));
+    const uDayCol=resizing.uDayCol;
+    const origStart=uDayCol+origOffset,origEnd=origStart+origSpan-1;
+    let newStart,newSpan;
+    if(side==='right'){newStart=origStart;newSpan=Math.max(1,col-origStart+1);}
+    else{newStart=Math.min(col,origEnd);newSpan=Math.max(1,origEnd-newStart+1);}
+    const u=units.find(x=>x.id===uid);if(!u)return;
+    u.tlOffset=newStart-uDayCol;u.tlSpan=newSpan;
+    const blkEl=document.querySelector('.blk[data-uid="'+uid+'"]');
+    if(blkEl){
+      const sc=Math.max(0,uDayCol+u.tlOffset),ec=Math.min(TOTAL_DAYS-1,sc+u.tlSpan-1);
+      const p2=pctD(sc,ec-sc+1);blkEl.style.left=p2.l;blkEl.style.width=p2.w;
+    }
+  } else {
+    const{dk,uCol}=resizing;
+    const areaEl=document.querySelector('.row-area[data-dk="'+dk+'"]');
+    if(!areaEl)return;
+    const r=areaEl.getBoundingClientRect();if(!r.width)return;
+    const col=Math.max(0,Math.min(TOTAL_DAYS-1,Math.floor((e.clientX-r.left)/r.width*TOTAL_DAYS)));
+    const uDayCol=uCol*7;
+    const origStart=uDayCol+origOffset,origEnd=origStart+origSpan-1;
+    let newStart,newSpan;
+    if(side==='right'){newStart=origStart;newSpan=Math.max(1,col-origStart+1);}
+    else{newStart=Math.min(col,origEnd);newSpan=Math.max(1,origEnd-newStart+1);}
+    const u=units.find(x=>x.id===uid);if(!u||!u.discFields)return;
+    const df=u.discFields[dk];df.offset=newStart-uDayCol;df.span=newSpan;
+    const dfEl=document.querySelector('.df[data-uid="'+uid+'"][data-dk="'+dk+'"]');
+    if(dfEl){
+      const sc=Math.max(0,uDayCol+df.offset),ec=Math.min(TOTAL_DAYS-1,sc+df.span-1);
+      const p2=pctD(sc,ec-sc+1);dfEl.style.left=p2.l;dfEl.style.width=p2.w;
+    }
   }
 });
 window.addEventListener('mouseup',()=>{if(resizing){resizing=null;saveState();render();}});
