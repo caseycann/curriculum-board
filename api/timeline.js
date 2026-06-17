@@ -230,20 +230,24 @@ function dayToDate(dayIdx){
   base.setDate(base.getDate()+di);
   return MO[base.getMonth()]+' '+base.getDate();
 }
-// Convert calendar date string to day-index (matches typed input back to timeline)
+// Convert calendar date string to day-index
 function dateToDay(str){
   str=(str||'').trim();
-  if(WEEK_DAY[str]!=null)return WEEK_DAY[str]; // exact week label
-  const d=parseMonthDay(str);if(!d)return null;
+  if(!str)return null;
+  if(WEEK_DAY[str]!=null)return WEEK_DAY[str]; // exact week label fast path
+  const d=parseMonthDay(str);
+  if(!d||isNaN(d.getTime()))return null;
+  const dT=d.getTime();
   let best=null,bestDiff=Infinity;
-  DAY_WEEK.forEach((w,wi)=>{
-    const base=parseMonthDay(w);if(!base)return;
+  for(let wi=0;wi<DAY_WEEK.length;wi++){
+    const base=parseMonthDay(DAY_WEEK[wi]);
+    if(!base||isNaN(base.getTime()))continue;
+    const bT=base.getTime();
     for(let di=0;di<7;di++){
-      const chk=new Date(base);chk.setDate(chk.getDate()+di);
-      const diff=Math.abs(chk-d);
+      const diff=Math.abs(bT+di*86400000-dT);
       if(diff<bestDiff){bestDiff=diff;best=wi*7+di;}
     }
-  });
+  }
   return best;
 }
 function ensureDF(u){
@@ -350,9 +354,9 @@ function buildTimeline(){
     blk.style.left=p2.l;blk.style.width=p2.w;
     blk.style.background=c.bg;blk.style.borderColor=c.bd;
 
-    // Left resize handle (flex child — no position conflicts)
+    // Left resize handle — pointerdown+setPointerCapture bypasses HTML drag entirely
     const plh=document.createElement('div');plh.className='plh';
-    plh.addEventListener('mousedown',e=>{e.preventDefault();e.stopPropagation();resizing={type:'proj',side:'left',uid:u.id,uDayCol,origOffset:tlOff,origSpan:tlSpan};});
+    plh.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();plh.setPointerCapture(e.pointerId);resizing={type:'proj',side:'left',uid:u.id,uDayCol,origOffset:tlOff,origSpan:tlSpan};});
     plh.addEventListener('click',e=>e.stopPropagation());
     blk.appendChild(plh);
 
@@ -371,9 +375,9 @@ function buildTimeline(){
     body.appendChild(dv);
     blk.appendChild(body);
 
-    // Right resize handle (flex child — sits flush at right edge)
+    // Right resize handle
     const prh=document.createElement('div');prh.className='prh';
-    prh.addEventListener('mousedown',e=>{e.preventDefault();e.stopPropagation();resizing={type:'proj',side:'right',uid:u.id,uDayCol,origOffset:tlOff,origSpan:tlSpan};});
+    prh.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();prh.setPointerCapture(e.pointerId);resizing={type:'proj',side:'right',uid:u.id,uDayCol,origOffset:tlOff,origSpan:tlSpan};});
     prh.addEventListener('click',e=>e.stopPropagation());
     blk.appendChild(prh);
 
@@ -418,8 +422,8 @@ function buildTimeline(){
       });
 
       const lh=document.createElement('div');lh.className='lh';
-      lh.addEventListener('mousedown',e=>{
-        e.preventDefault();e.stopPropagation();
+      lh.addEventListener('pointerdown',e=>{
+        e.preventDefault();e.stopPropagation();lh.setPointerCapture(e.pointerId);
         resizing={type:'disc',side:'left',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||7};
       });
       wrap.appendChild(lh);
@@ -440,8 +444,8 @@ function buildTimeline(){
       wrap.appendChild(ta);
 
       const rh=document.createElement('div');rh.className='rh';
-      rh.addEventListener('mousedown',e=>{
-        e.preventDefault();e.stopPropagation();
+      rh.addEventListener('pointerdown',e=>{
+        e.preventDefault();e.stopPropagation();rh.setPointerCapture(e.pointerId);
         resizing={type:'disc',side:'right',uid:u.id,dk,uCol,origOffset:df.offset||0,origSpan:df.span||7};
       });
       wrap.appendChild(rh);
@@ -488,9 +492,9 @@ function showDet(u){
   ei.style.cssText=si.style.cssText;
   function applyDetDates(){
     const sv=dateToDay(si.value),ev=dateToDay(ei.value);
-    if(sv!=null&&ev!=null&&ev>sv){
-      u.tlOffset=sv-uDayCol2;u.tlSpan=ev-sv;render();saveState();
-    }
+    if(sv==null||ev==null||ev<=sv)return; // invalid or not yet a real range
+    u.tlOffset=sv-uDayCol2;u.tlSpan=ev-sv;
+    render();saveState();
   }
   [si,ei].forEach(inp=>{
     inp.addEventListener('blur',applyDetDates);
@@ -527,8 +531,9 @@ function closeDet(){
   document.querySelectorAll('.blk.active').forEach(el=>el.classList.remove('active'));
 }
 
-// Resize (project blocks and discipline fields)
-window.addEventListener('mousemove',e=>{
+// Resize — pointermove/pointerup so setPointerCapture keeps events
+// flowing even when the parent block has draggable=true
+window.addEventListener('pointermove',e=>{
   if(!resizing)return;
   const{type,side,uid,origOffset,origSpan}=resizing;
 
@@ -572,7 +577,7 @@ window.addEventListener('mousemove',e=>{
     }
   }
 });
-window.addEventListener('mouseup',()=>{if(resizing){resizing=null;saveState();render();}});
+window.addEventListener('pointerup',()=>{if(resizing){resizing=null;saveState();render();}});
 
 function buildPool(){
   const pool=document.getElementById('pool');pool.innerHTML='';
