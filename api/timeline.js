@@ -16,13 +16,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;ba
 header{background:#1F3864;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 header h1{font-size:16px;font-weight:600}
 .back{color:rgba(255,255,255,.7);text-decoration:none;font-size:12px}.back:hover{color:#fff}
-.toolbar{background:#fff;border-bottom:1px solid #E5E3DE;padding:10px 24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:100}
+.toolbar{background:#fff;border-bottom:1px solid #E5E3DE;padding:10px 24px;display:flex;gap:8px;align-items:center;position:sticky;top:0;z-index:100}
 button{font-size:11px;padding:5px 12px;border:1px solid #D5D3CE;background:#fff;border-radius:6px;cursor:pointer;color:#333;transition:all .12s;font-family:inherit}
 button:hover{background:#F0EEE9;border-color:#bbb}
 button.add{background:#2A6B45;color:#fff;border-color:#2A6B45;font-weight:600}
 button.add:hover{background:#1d4f31}
 .main{padding:20px 24px}
-.tl-wrap{overflow-x:auto;padding-bottom:8px;min-width:0}
+.tl-wrap{overflow-x:auto;padding-bottom:4px;min-width:0}
 .tl-table{min-width:900px;width:100%}
 .hdr-row{display:flex;height:22px}
 .hdr-lbl{width:70px;flex-shrink:0}
@@ -30,7 +30,7 @@ button.add:hover{background:#1d4f31}
 .term-hdr{display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;border-radius:4px 4px 0 0}
 .week-hdr{flex:1;font-size:7.5px;font-weight:600;color:#888;text-align:center;display:flex;align-items:center;justify-content:center;border-left:1px solid rgba(0,0,0,.04)}
 .data-row{display:flex;border-bottom:1px solid #ECEAE6}
-.row-lbl{width:70px;flex-shrink:0;padding:6px 6px 6px 0;display:flex;align-items:flex-start;font-size:8.5px;font-weight:600;color:#666;line-height:1.3;word-break:break-word;padding-top:10px}
+.row-lbl{width:70px;flex-shrink:0;padding:6px 6px 6px 0;display:flex;align-items:center;font-size:8.5px;font-weight:600;color:#666;line-height:1.3;word-break:break-word}
 .row-lbl.proj{color:#4a30a0;font-size:9px}
 .row-area{flex:1;position:relative;min-height:60px}
 .band{position:absolute;top:0;bottom:0;pointer-events:none}
@@ -38,24 +38,37 @@ button.add:hover{background:#1d4f31}
 .tline{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.09);pointer-events:none}
 .proj-drop{position:absolute;top:0;bottom:0;left:0;right:0}
 .proj-drop.dov{background:rgba(46,117,182,.08)}
-.blk{position:absolute;top:5px;border-radius:6px;padding:5px 18px 5px 7px;border-width:1.5px;border-style:solid;cursor:grab;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:opacity .1s;min-height:50px}
-.blk:active{cursor:grabbing}.blk.drag{opacity:.3}
+/* Project blocks */
+.blk{position:absolute;top:5px;border-radius:6px;padding:5px 18px 5px 7px;border-width:1.5px;border-style:solid;cursor:pointer;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.07);transition:opacity .1s,box-shadow .1s;min-height:50px}
+.blk:hover{box-shadow:0 2px 8px rgba(0,0,0,.14)}
+.blk.drag{opacity:.3;cursor:grabbing}
+.blk.active{box-shadow:0 0 0 2.5px #1F3864,0 2px 8px rgba(0,0,0,.12)}
 .bt{font-size:9.5px;font-weight:600;line-height:1.3}
 .bs{font-size:8px;opacity:.7;margin-top:2px;line-height:1.2}
 .rm{position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:50%;border:none;cursor:pointer;font-size:8px;display:flex;align-items:center;justify-content:center;opacity:0;background:rgba(0,0,0,.2);color:#fff;padding:0;line-height:1}
 .blk:hover .rm{opacity:1}
-.df{position:absolute;top:4px;bottom:4px;border-radius:6px;border-width:1.5px;border-style:solid;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.df-hdr{display:flex;align-items:center;gap:4px;padding:3px 14px 3px 12px;flex-shrink:0}
-.df-hdr input[type=checkbox]{width:10px;height:10px;cursor:pointer;flex-shrink:0;accent-color:#1F3864}
-.df-hdr label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.df-body{flex:1;padding:0 6px 4px;display:flex;min-height:0}
-.df-body.hidden{display:none}
-.df textarea{flex:1;font-size:9.5px;border:1px solid rgba(0,0,0,.12);border-radius:4px;padding:3px 4px;resize:none;font-family:inherit;background:rgba(255,255,255,.7);line-height:1.4;width:100%;color:#333;min-height:0}
-.df textarea:focus{outline:none;border-color:#2E75B6;background:#fff}
-.lh,.rh{position:absolute;top:0;bottom:0;width:8px;cursor:ew-resize;z-index:5;display:flex;align-items:center;justify-content:center}
-.lh{left:0}.rh{right:0}
-.lh::after,.rh::after{content:'';width:2px;height:16px;background:rgba(0,0,0,.25);border-radius:1px}
-.lh:hover::after,.rh:hover::after{background:rgba(0,0,0,.5)}
+/* Discipline fields — simplified: no header, just textarea + handles */
+.df{position:absolute;top:5px;bottom:5px;border-radius:6px;border-width:1.5px;border-style:solid;display:flex;align-items:stretch;overflow:hidden;z-index:1}
+.df textarea{flex:1;font-size:9.5px;border:none;padding:4px 4px 4px 8px;font-family:inherit;background:transparent;line-height:1.4;resize:none;color:inherit;min-width:0}
+.df textarea:focus{outline:none;background:rgba(255,255,255,.5)}
+.lh,.rh{flex-shrink:0;width:8px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.05)}
+.lh::after,.rh::after{content:'';width:2px;height:14px;background:rgba(0,0,0,.25);border-radius:1px}
+.lh:hover,.rh:hover{background:rgba(0,0,0,.1)}
+/* Detail panel */
+.det{display:none;background:#fff;border-radius:10px;border:1px solid #E0DED9;padding:16px 20px;margin-top:14px;box-shadow:0 2px 10px rgba(0,0,0,.08);font-size:12px}
+.det.op{display:block}
+.det-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:12px}
+.det-title{font-size:14px;font-weight:700}
+.det-sub{font-size:11px;color:#888;margin-top:2px}
+.det-row{display:flex;gap:10px;margin-bottom:4px;font-size:11.5px;align-items:baseline}
+.det-key{font-size:9.5px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.06em;min-width:52px;flex-shrink:0}
+.det-val{color:#444}
+.det-discs{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #F0EEE9}
+.disc-chip{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;border-width:1.5px;border-style:solid;cursor:pointer;font-size:10.5px;font-weight:600;user-select:none;transition:opacity .12s}
+.disc-chip input[type=checkbox]{cursor:pointer;width:11px;height:11px;flex-shrink:0}
+.disc-chip.off{opacity:.45}
+.det-btns{display:flex;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid #F0EEE9}
+/* Pool */
 .pool-section{margin-top:20px;padding-top:16px;border-top:1px solid #E5E3DE}
 .pool-label{font-size:12px;font-weight:600;color:#555;margin-bottom:8px}
 .pool{display:flex;flex-wrap:wrap;gap:6px;min-height:48px;padding:8px;border-radius:8px;border:1.5px dashed #C5C3BE;background:#F0EEE9}
@@ -64,13 +77,14 @@ button.add:hover{background:#1d4f31}
 .mn:active{cursor:grabbing;opacity:.8}.mn.drag{opacity:.3}
 .mn .rm{opacity:0}.mn:hover .rm{opacity:1}
 .empty-pool{font-size:11px;color:#aaa;font-style:italic;padding:4px}
+/* Modal */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(2px)}
 .modal-bg.op{display:flex}
 .modal{background:#fff;border-radius:14px;padding:24px;width:360px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.18)}
 .modal h3{font-size:16px;font-weight:700;margin-bottom:16px;color:#1F3864}
 .fr{margin-bottom:12px}
 .fr label{display:block;font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-.fr input,.fr textarea,.fr select{width:100%;font-size:12px;padding:7px 10px;border:1px solid #D5D3CE;border-radius:7px;background:#FAFAF8;color:#222;font-family:inherit;transition:border-color .12s}
+.fr input,.fr textarea{width:100%;font-size:12px;padding:7px 10px;border:1px solid #D5D3CE;border-radius:7px;background:#FAFAF8;color:#222;font-family:inherit;transition:border-color .12s}
 .fr input:focus,.fr textarea:focus{outline:none;border-color:#2E75B6;background:#fff}
 .fr textarea{height:56px;resize:vertical}
 .cg{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:6px}
@@ -78,9 +92,6 @@ button.add:hover{background:#1d4f31}
 .sw:hover{transform:scale(1.08)}
 .sw.sel::after{content:'\\2713';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:rgba(0,0,0,.5)}
 .sw.sel{box-shadow:0 0 0 2.5px #1F3864,0 0 0 4px #fff inset}
-.dtags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
-.dtag{padding:4px 9px;border-radius:5px;font-size:10.5px;cursor:pointer;border:1.5px solid #D5D3CE;background:#F5F3EF;color:#555;transition:all .1s;font-weight:500}
-.dtag.sel{font-weight:700}
 .mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid #EEE}
 .mbtns button{font-size:12px;padding:7px 16px}
 .mbtns .pri{background:#2A6B45;color:#fff;border-color:#2A6B45;font-weight:600}
@@ -97,6 +108,7 @@ button.add:hover{background:#1d4f31}
 </div>
 <div class="main">
   <div class="tl-wrap"><div class="tl-table" id="tl"></div></div>
+  <div class="det" id="det"></div>
   <div class="pool-section">
     <div class="pool-label">Unplaced units &mdash; drag onto the Project row above</div>
     <div class="pool" id="pool"></div>
@@ -165,8 +177,8 @@ const ORIG=[
 ];
 
 let units=ORIG.map(u=>({...u}));
-let nid=200,drag=null,lastVersion=null,resizing=null;
-let editId=null,selPal=0,selDiscs=[];
+let nid=200,drag=null,lastVersion=null,resizing=null,detUid=null;
+let editId=null,selPal=0;
 
 function pal(u){return PAL[u.pal||0];}
 function colOf(u){
@@ -221,14 +233,13 @@ function oDS(e,uid){
 }
 function oDE(){document.querySelectorAll('.drag').forEach(el=>el.classList.remove('drag'));drag=null;}
 
-function render(){buildTimeline();buildPool();}
+function render(){buildTimeline();buildPool();if(detUid){const u=units.find(x=>x.id===detUid);if(u)showDet(u);else closeDet();}}
 
 function buildTimeline(){
   const tl=document.getElementById('tl');tl.innerHTML='';
 
-  // Term header
   const th=document.createElement('div');th.className='hdr-row';
-  const thl=document.createElement('div');thl.className='hdr-lbl';th.appendChild(thl);
+  th.appendChild(Object.assign(document.createElement('div'),{className:'hdr-lbl'}));
   const tha=document.createElement('div');tha.className='hdr-area';
   TERMS.forEach(t=>{
     const d=document.createElement('div');d.className='term-hdr';d.style.flex=t.weeks.length;
@@ -236,9 +247,8 @@ function buildTimeline(){
   });
   th.appendChild(tha);tl.appendChild(th);
 
-  // Week header
   const wh=document.createElement('div');wh.className='hdr-row';
-  const whl=document.createElement('div');whl.className='hdr-lbl';wh.appendChild(whl);
+  wh.appendChild(Object.assign(document.createElement('div'),{className:'hdr-lbl'}));
   const wha=document.createElement('div');wha.className='hdr-area';
   TERMS.forEach(t=>t.weeks.forEach(w=>{
     const d=document.createElement('div');d.className='week-hdr';d.textContent=w;wha.appendChild(d);
@@ -247,7 +257,7 @@ function buildTimeline(){
 
   // Project row
   const pr=document.createElement('div');pr.className='data-row';
-  const prl=document.createElement('div');prl.className='row-lbl proj';prl.textContent='Project';pr.appendChild(prl);
+  pr.appendChild(Object.assign(document.createElement('div'),{className:'row-lbl proj',textContent:'Project'}));
   const pra=document.createElement('div');pra.className='row-area';pra.style.minHeight='70px';
   buildBg(pra);
   const dz=document.createElement('div');dz.className='proj-drop';
@@ -266,37 +276,40 @@ function buildTimeline(){
     if(u.term==null||u.week==null)return;
     const col=colOf(u),c=pal(u),p2=pct(col);
     const blk=document.createElement('div');
-    blk.className='blk';blk.draggable=true;blk.dataset.uid=u.id;
+    blk.className='blk'+(detUid===u.id?' active':'');
+    blk.draggable=true;blk.dataset.uid=u.id;
     blk.style.left=p2.l;blk.style.width=p2.w;blk.style.background=c.bg;blk.style.borderColor=c.bd;
     blk.innerHTML='<div class="bt" style="color:'+c.tx+'">'+u.title+'</div><div class="bs" style="color:'+c.tx+'">'+u.sub+'</div><button class="rm">&#x2715;</button>';
-    blk.querySelector('.rm').onclick=e=>{e.stopPropagation();u.term=undefined;u.week=undefined;render();saveState();};
-    blk.addEventListener('dragstart',e=>oDS(e,u.id));blk.addEventListener('dragend',oDE);
+    blk.querySelector('.rm').onclick=e=>{e.stopPropagation();u.term=undefined;u.week=undefined;if(detUid===u.id)closeDet();render();saveState();};
+    blk.addEventListener('dragstart',e=>{oDS(e,u.id);});
+    blk.addEventListener('dragend',oDE);
+    blk.addEventListener('click',e=>{if(e.target.classList.contains('rm'))return;showDet(u);});
     pra.appendChild(blk);
   });
   pr.appendChild(pra);tl.appendChild(pr);
 
-  // Discipline rows
+  // Discipline rows — only show .df for enabled disciplines
   DISCS.forEach(dk=>{
     const info=DC[dk];
     const row=document.createElement('div');row.className='data-row';
     const lbl=document.createElement('div');lbl.className='row-lbl';
     lbl.innerHTML='<span style="color:'+info.bd+'">'+info.label+'</span>';
     row.appendChild(lbl);
-    const area=document.createElement('div');area.className='row-area';area.style.minHeight='80px';
-    area.dataset.dk=dk; // key: lets resize find fresh reference by data-dk
+    const area=document.createElement('div');area.className='row-area';area.style.minHeight='72px';
+    area.dataset.dk=dk;
     buildBg(area);
 
     units.forEach(u=>{
       if(u.term==null||u.week==null)return;
       ensureDF(u);
-      const df=u.discFields[dk],uCol=colOf(u),pos=dfPos(u,dk),p2=pct(pos.sc,pos.span);
+      const df=u.discFields[dk];
+      if(!df.enabled)return; // only show enabled disciplines
+      const uCol=colOf(u),pos=dfPos(u,dk),p2=pct(pos.sc,pos.span);
       const wrap=document.createElement('div');
-      wrap.className='df';
-      wrap.dataset.uid=u.id; // key: lets resize update position directly
-      wrap.dataset.dk=dk;
-      wrap.style.left=p2.l;wrap.style.width=p2.w;wrap.style.background=info.bg;wrap.style.borderColor=info.bd;
+      wrap.className='df';wrap.dataset.uid=u.id;wrap.dataset.dk=dk;
+      wrap.style.left=p2.l;wrap.style.width=p2.w;
+      wrap.style.background=info.bg;wrap.style.borderColor=info.bd;wrap.style.color=info.tx;
       wrap.style.zIndex='1';
-      // Bring to foreground on click so overlapping fields don't block resize handles
       wrap.addEventListener('mousedown',()=>{
         document.querySelectorAll('.df[data-dk="'+dk+'"]').forEach(el=>el.style.zIndex='1');
         wrap.style.zIndex='20';
@@ -309,18 +322,15 @@ function buildTimeline(){
       });
       wrap.appendChild(lh);
 
-      const hdr=document.createElement('div');hdr.className='df-hdr';
-      const chk=document.createElement('input');chk.type='checkbox';chk.checked=df.enabled;
-      const cbId='cb-'+u.id+'-'+dk;chk.id=cbId;
-      chk.addEventListener('change',()=>{df.enabled=chk.checked;render();queueSave();});
-      const lbl2=document.createElement('label');lbl2.htmlFor=cbId;lbl2.textContent=info.label;lbl2.style.color=info.tx;
-      hdr.appendChild(chk);hdr.appendChild(lbl2);wrap.appendChild(hdr);
-
-      const body=document.createElement('div');body.className='df-body'+(df.enabled?'':' hidden');
       const ta=document.createElement('textarea');
-      ta.placeholder='Notes for '+info.label+'...';ta.value=df.notes||'';ta.style.color=info.tx;
-      ta.addEventListener('input',()=>{df.notes=ta.value;});ta.addEventListener('blur',()=>queueSave());
-      body.appendChild(ta);wrap.appendChild(body);
+      ta.placeholder='Notes...';ta.value=df.notes||'';
+      ta.addEventListener('input',()=>{df.notes=ta.value;});
+      ta.addEventListener('blur',()=>queueSave());
+      ta.addEventListener('focus',()=>{
+        document.querySelectorAll('.df[data-dk="'+dk+'"]').forEach(el=>el.style.zIndex='1');
+        wrap.style.zIndex='20';
+      });
+      wrap.appendChild(ta);
 
       const rh=document.createElement('div');rh.className='rh';
       rh.addEventListener('mousedown',e=>{
@@ -334,25 +344,67 @@ function buildTimeline(){
   });
 }
 
-// Resize: use fresh DOM lookup each mousemove to avoid stale-reference bug
+// Detail panel
+function showDet(u){
+  detUid=u.id;
+  ensureDF(u);
+  const c=pal(u);
+  const det=document.getElementById('det');
+  det.className='det op';
+  det.innerHTML=
+    '<div class="det-hdr">'
+    +'<div><div class="det-title" style="color:'+c.tx+'">'+u.title+'</div>'
+    +(u.sub?'<div class="det-sub">'+u.sub+'</div>':'')+'</div>'
+    +'<button onclick="closeDet()">&#x2715; Close</button></div>'
+    +(u.skills?'<div class="det-row"><span class="det-key">Skills</span><span class="det-val">'+u.skills+'</span></div>':'')
+    +(u.tools?'<div class="det-row"><span class="det-key">Tools</span><span class="det-val">'+u.tools+'</span></div>':'')
+    +(u.notes?'<div class="det-row"><span class="det-key">Notes</span><span class="det-val">'+u.notes+'</span></div>':'')
+    +'<div class="det-discs" id="det-discs"></div>'
+    +'<div class="det-btns"><button onclick="openMod(\''+u.id+'\')">&#x270F; Edit block</button>'
+    +'<button style="margin-left:auto" onclick="closeDet()">Close</button></div>';
+
+  const discsEl=document.getElementById('det-discs');
+  DISCS.forEach(dk=>{
+    const info=DC[dk];
+    const df=u.discFields[dk];
+    const chip=document.createElement('label');
+    chip.className='disc-chip'+(df.enabled?'':' off');
+    chip.style.background=info.bg;chip.style.borderColor=info.bd;chip.style.color=info.tx;
+    const chk=document.createElement('input');chk.type='checkbox';chk.checked=df.enabled;
+    chk.addEventListener('change',()=>{
+      df.enabled=chk.checked;
+      chip.classList.toggle('off',!chk.checked);
+      render(); // rebuilds timeline rows; panel re-renders via detUid
+      queueSave();
+    });
+    chip.appendChild(chk);
+    chip.appendChild(document.createTextNode(info.label));
+    discsEl.appendChild(chip);
+  });
+
+  // Highlight the active block
+  document.querySelectorAll('.blk').forEach(el=>el.classList.toggle('active',el.dataset.uid===u.id));
+}
+function closeDet(){
+  detUid=null;
+  document.getElementById('det').className='det';
+  document.querySelectorAll('.blk.active').forEach(el=>el.classList.remove('active'));
+}
+
+// Resize
 window.addEventListener('mousemove',e=>{
   if(!resizing)return;
   const{side,uid,dk,uCol,origOffset,origSpan}=resizing;
   const areaEl=document.querySelector('.row-area[data-dk="'+dk+'"]');
   if(!areaEl)return;
-  const r=areaEl.getBoundingClientRect();
-  if(!r.width)return;
+  const r=areaEl.getBoundingClientRect();if(!r.width)return;
   const col=Math.max(0,Math.min(TOTAL-1,Math.floor((e.clientX-r.left)/r.width*TOTAL)));
   const origStart=uCol+origOffset,origEnd=origStart+origSpan-1;
   let newStart,newSpan;
-  if(side==='right'){
-    newStart=origStart;newSpan=Math.max(1,col-origStart+1);
-  }else{
-    newStart=Math.min(col,origEnd);newSpan=Math.max(1,origEnd-newStart+1);
-  }
+  if(side==='right'){newStart=origStart;newSpan=Math.max(1,col-origStart+1);}
+  else{newStart=Math.min(col,origEnd);newSpan=Math.max(1,origEnd-newStart+1);}
   const u=units.find(x=>x.id===uid);if(!u||!u.discFields)return;
   const df=u.discFields[dk];df.offset=newStart-uCol;df.span=newSpan;
-  // Update element position directly — no full render() during drag
   const dfEl=document.querySelector('.df[data-uid="'+uid+'"][data-dk="'+dk+'"]');
   if(dfEl){
     const sc=Math.max(0,uCol+df.offset),ec=Math.min(TOTAL-1,sc+df.span-1);
@@ -393,16 +445,15 @@ poolEl.addEventListener('drop',e=>{
 function openMod(uid){
   editId=uid||null;const u=uid?units.find(x=>x.id===uid):null;
   document.getElementById('mtitle').textContent=u?'Edit block':'New unit block';
-  document.getElementById('ft').value=u?u.title:'';document.getElementById('fs').value=u?u.sub:'';
-  document.getElementById('fsk').value=u?u.skills:'';document.getElementById('fto').value=u?u.tools:'';
-  document.getElementById('fn').value=u?u.notes:'';
+  document.getElementById('ft').value=u?u.title:'';document.getElementById('fs').value=u?(u.sub||''):'';
+  document.getElementById('fsk').value=u?(u.skills||''):'';document.getElementById('fto').value=u?(u.tools||''):'';
+  document.getElementById('fn').value=u?(u.notes||''):'';
   document.getElementById('savebtn').textContent=u?'Save changes':'Add block';
   selPal=u?(u.pal||0):0;
   const cg=document.getElementById('cg');cg.innerHTML='';
   PAL.forEach((c,i)=>{
     const sw=document.createElement('div');sw.className='sw'+(i===selPal?' sel':'');
     sw.style.background=c.bg;sw.style.border='2px solid '+c.bd;sw.title=c.name;
-    // Toggle selection directly — never call openMod() here or fields reset
     sw.onclick=()=>{selPal=i;cg.querySelectorAll('.sw').forEach((s,j)=>s.classList.toggle('sel',j===i));};
     cg.appendChild(sw);
   });
@@ -418,11 +469,11 @@ document.getElementById('savebtn').addEventListener('click',()=>{
   const data={title,sub:document.getElementById('fs').value.trim(),skills:document.getElementById('fsk').value.trim(),
     tools:document.getElementById('fto').value.trim(),notes:document.getElementById('fn').value.trim(),
     disc:DISCS,pal:selPal};
-  if(editId){const u=units.find(x=>x.id===editId);if(u)Object.assign(u,data);}
+  if(editId){const u=units.find(x=>x.id===editId);if(u){Object.assign(u,data);if(detUid===u.id)showDet(u);}}
   else units.push({id:'u'+(++nid),...data,term:undefined,week:undefined});
   closeMod();render();saveState();
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMod();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMod();closeDet();}});
 
 (async function init(){
   try{const r=await fetch('/api/state');if(r.ok){const d=await r.json();if(d&&d.units){units=d.units;nid=d.nid||200;lastVersion=d.v||null;}}}catch(_){}
