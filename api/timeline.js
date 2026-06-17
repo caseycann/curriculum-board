@@ -377,7 +377,10 @@ function buildTimeline(){
     prh.addEventListener('click',e=>e.stopPropagation());
     blk.appendChild(prh);
 
-    blk.addEventListener('dragstart',e=>{oDS(e,u.id);});
+    blk.addEventListener('dragstart',e=>{
+      if(resizing){e.preventDefault();return;} // handles take priority — don't start a drag
+      oDS(e,u.id);
+    });
     blk.addEventListener('dragend',oDE);
     blk.addEventListener('click',e=>{
       if(['rm','plh','prh'].some(cl=>e.target.classList.contains(cl)))return;
@@ -545,6 +548,9 @@ window.addEventListener('mousemove',e=>{
     if(blkEl){
       const sc=Math.max(0,uDayCol+u.tlOffset),ec=Math.min(TOTAL_DAYS-1,sc+u.tlSpan-1);
       const p2=pctD(sc,ec-sc+1);blkEl.style.left=p2.l;blkEl.style.width=p2.w;
+      // Update date label live so user sees dates change as they drag
+      const dtEl=blkEl.querySelector('.blk-dates');
+      if(dtEl)dtEl.textContent=dayToDate(sc)+' → '+dayToDate(sc+u.tlSpan);
     }
   } else {
     const{dk,uCol}=resizing;
